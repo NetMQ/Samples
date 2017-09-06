@@ -69,7 +69,7 @@ namespace MajordomoProtocol
         /// <param name="brokerAddress">address the broker can be connected to</param>
         /// <param name="identity">if present will become the name for the client socket, encoded in UTF8</param>
         public MDPClient (string brokerAddress, byte[] identity = null)
-            : this ()
+            : this()
         {
             if (string.IsNullOrWhiteSpace (brokerAddress))
                 throw new ArgumentNullException (nameof(brokerAddress), "The broker address must not be null, empty or whitespace!");
@@ -83,7 +83,8 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="brokerAddress">address the broker can be connected to</param>
         /// <param name="identity">sets the name of the client (must be UTF8), if empty or white space it is ignored</param>
-        public MDPClient (string brokerAddress, string identity)
+        public MDPClient (string brokerAddress, string identity) 
+				: this()
         {
             if (string.IsNullOrWhiteSpace (brokerAddress))
                 throw new ArgumentNullException (nameof(brokerAddress), "The broker address must not be null, empty or whitespace!");
