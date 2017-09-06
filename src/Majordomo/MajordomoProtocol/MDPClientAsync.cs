@@ -96,6 +96,7 @@ namespace MajordomoProtocol
         /// <param name="brokerAddress">address the broker can be connected to</param>
         /// <param name="identity">sets the name of the client (must be UTF8), if empty or white space it is ignored</param>
         public MDPClientAsync([NotNull] string brokerAddress, string identity)
+				: this()
         {
             if (string.IsNullOrWhiteSpace(brokerAddress))
                 throw new ArgumentNullException(nameof(brokerAddress), "The broker address must not be null, empty or whitespace!");
