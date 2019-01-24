@@ -133,6 +133,7 @@ namespace ParanoidPirate.Queue
 
                 poller.Add(frontend);
                 poller.Add(backend);
+                poller.Add(timer);
 
                 poller.RunAsync();
 

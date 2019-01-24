@@ -45,8 +45,9 @@ namespace ParanoidPirate.Queue
         /// </summary>
         public void Purge()
         {
-            foreach (var worker in m_workers.Where(worker => worker.Expiry >= DateTime.UtcNow))
+            foreach (var worker in m_workers.Where(worker => worker.Expiry < DateTime.UtcNow).ToList())
                 m_workers.Remove(worker);
+                
         }
 
         public IEnumerator<Worker> GetEnumerator()
