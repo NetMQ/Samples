@@ -29,7 +29,7 @@ namespace ParanoidPirate.Worker
             // if liveliness == 0 -> queue is considered dead/disconnected
             var liveliness = Commons.HeartbeatLiveliness;
             var interval = Commons.IntervalInit;
-            var heartbeatAt = DateTime.UtcNow + + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval);
+            var heartbeatAt = DateTime.UtcNow + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval);
             var cycles = 0;
             var crash = false;
 
@@ -118,7 +118,7 @@ namespace ParanoidPirate.Worker
                 // if it is time the worker will send a heartbeat so QUEUE can detect a dead worker
                 if (DateTime.UtcNow > heartbeatAt)
                 {
-                    heartbeatAt = DateTime.UtcNow + + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval);
+                    heartbeatAt = DateTime.UtcNow + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval);
 
                     Console.WriteLine("[WORKER] sending heartbeat!");
 
