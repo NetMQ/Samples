@@ -33,9 +33,9 @@ namespace ParanoidPirate.Queue
                 return null;
 
             // get the oldest worker
-            var worker = m_workers.Last();
+            var worker = m_workers[0];
             // remove it from list
-            m_workers.Remove(worker);
+            m_workers.RemoveAt(0);
 
             return worker.Identity;
         }
