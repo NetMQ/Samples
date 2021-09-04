@@ -39,7 +39,7 @@ namespace MajordomoTests
 
                 sut.Bind ();
 
-                Assert.That (info, Is.EqualTo ("[MDP BROKER] MDP Broker/0.3 is active at tcp://localhost:5555"));
+                Assert.That (info, Is.EqualTo ("[MDP BROKER] MDP Broker/1.0 is active at tcp://localhost:5555"));
             }
         }
 
@@ -63,7 +63,7 @@ namespace MajordomoTests
 
                 sut.Bind ("tcp://localhost:5555");
 
-                Assert.That (info, Is.EqualTo ("[MDP BROKER] MDP Broker/0.3 is active at tcp://localhost:5555"));
+                Assert.That (info, Is.EqualTo ("[MDP BROKER] MDP Broker/1.0 is active at tcp://localhost:5555"));
             }
         }
 
@@ -105,7 +105,7 @@ namespace MajordomoTests
                 cts.Cancel ();
                 // check on the logging
                 Assert.That (log.Count, Is.EqualTo (2));
-                Assert.That (log[1], Is.StringContaining ("added to service echo"));
+                Assert.That (log[1], Does.Contain ("added to service echo"));
             }
         }
 
@@ -132,7 +132,7 @@ namespace MajordomoTests
                 cts.Cancel ();
                 // check on the logging
                 Assert.That (log.Count, Is.EqualTo (2));
-                Assert.That (log[1], Is.StringContaining ("added to service echo"));
+                Assert.That (log[1], Does.Contain ("added to service echo"));
             }
         }
 

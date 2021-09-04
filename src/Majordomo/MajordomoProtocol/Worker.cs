@@ -6,7 +6,7 @@ namespace MajordomoProtocol
     /// <summary>
     /// A broker local representation of a connected worker
     /// </summary>
-    internal class Worker
+    public class Worker
     {
         // the id of the worker as string
         public string Id { get; }
