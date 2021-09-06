@@ -1,46 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BA3B66DE-85AB-44F0-890B-E598C777880D}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MDPClientExample</RootNamespace>
-    <AssemblyName>MDPClientExample</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <TargetFrameworks>net45;net47;net5.0;netcoreapp3.1;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="NetMQ" Version="4.0.1.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MajordomoProtocol\MajordomoProtocol.csproj">
