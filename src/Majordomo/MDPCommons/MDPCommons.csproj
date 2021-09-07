@@ -5,8 +5,4 @@
     <Product>MDPCommons</Product>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>
-  </PropertyGroup>
-
 </Project>

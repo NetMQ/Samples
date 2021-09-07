@@ -5,10 +5,6 @@
     <Product>Majordomo</Product>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
   </ItemGroup>
