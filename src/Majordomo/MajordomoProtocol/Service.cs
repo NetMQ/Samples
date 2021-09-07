@@ -9,7 +9,7 @@ namespace MajordomoProtocol
     /// Act as a frame for worker offering the service.
     /// As well as for pending requests to workers.
     /// </summary>
-    internal class Service
+    public class Service
     {
         private readonly List<Worker> m_workers;                // list of known and active worker for this service 
         private readonly List<NetMQMessage> m_pendingRequests;  // list of client requests for that service
