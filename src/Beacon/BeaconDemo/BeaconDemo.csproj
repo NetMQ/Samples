@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Copyright>Copyright © 2016</Copyright>
+    <Product>BeaconDemo</Product>
+  </PropertyGroup>
 
   <PropertyGroup>
     <TargetFrameworks>net48;net5.0;netcoreapp3.1;</TargetFrameworks>

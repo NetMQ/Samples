@@ -1,4 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <Company>HP</Company>
+    <Copyright>Copyright © HP 2013</Copyright>
+    <Product>Freelance.ModelOne.Client</Product>
+  </PropertyGroup>
 
   <PropertyGroup>
     <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>

@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Copyright>Copyright © 2015</Copyright>
+    <Product>MDPClientExample</Product>
+  </PropertyGroup>
+  
+  <PropertyGroup>
     <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

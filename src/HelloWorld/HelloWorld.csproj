@@ -1,6 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Company>Microsoft</Company>
+    <Copyright>Copyright © Microsoft 2013</Copyright>
+    <Product>HelloWorld</Product>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TargetFrameworks>net48;net5.0;netcoreapp3.1</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
