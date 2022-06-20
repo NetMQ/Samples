@@ -28,7 +28,7 @@ namespace TitanicProtocolTests
         {
             var sut = new TitanicMemoryIO ();
 
-            sut.Invoking (o => o.SaveRequestEntry (null)).ShouldThrow<ArgumentNullException> ();
+            sut.Invoking (o => o.SaveRequestEntry (null)).Should().Throw<ArgumentNullException> ();
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace TitanicProtocolTests
 
             sut.NumberOfRequests.Should ().Be (1, "because we just added one");
             result.RequestId.Should ().Be (id);
-            result.Request.ShouldBeEquivalentTo (request);
+            result.Request.Should().BeEquivalentTo (request);
             result.Position.Should ().Be (-1);
             result.State.Should ().Be (RequestEntry.Is_Pending);
         }
@@ -93,7 +93,7 @@ namespace TitanicProtocolTests
             var result = sut.GetRequestEntry (id);
 
             result.RequestId.Should ().Be (id);
-            result.Request.ShouldBeEquivalentTo (request);
+            result.Request.Should().BeEquivalentTo(request);
             result.Position.Should ().Be (-1);
             result.State.Should ().Be (RequestEntry.Is_Pending);
         }
@@ -123,7 +123,7 @@ namespace TitanicProtocolTests
             var result = sut.GetRequestEntry (id);
 
             result.RequestId.Should ().Be (id);
-            result.Request.ShouldBeEquivalentTo (request);
+            result.Request.Should().BeEquivalentTo(request);
             result.Position.Should ().Be (-1);
             result.State.Should ().Be (RequestEntry.Is_Processed);
         }
@@ -143,7 +143,7 @@ namespace TitanicProtocolTests
             var result = sut.GetRequestEntry (id);
 
             result.RequestId.Should ().Be (id);
-            result.Request.ShouldBeEquivalentTo (request);
+            result.Request.Should().BeEquivalentTo(request);
             result.Position.Should ().Be (-1);
             result.State.Should ().Be (RequestEntry.Is_Processed);
         }
@@ -178,7 +178,7 @@ namespace TitanicProtocolTests
             var sut = new TitanicMemoryIO ();
             var id = Guid.NewGuid ();
 
-            sut.GetRequestEntries (e => e.RequestId == id).ShouldAllBeEquivalentTo (default (IEnumerable<RequestEntry>));
+            sut.GetRequestEntries (e => e.RequestId == id).Should().AllBeEquivalentTo (default (IEnumerable<RequestEntry>));
         }
 
         [Test]

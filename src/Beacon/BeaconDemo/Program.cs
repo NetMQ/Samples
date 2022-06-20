@@ -1,6 +1,6 @@
-﻿using System;
+﻿using NetMQ;
+using System;
 using System.Threading;
-using NetMQ;
 
 namespace BeaconDemo
 {

@@ -259,7 +259,7 @@ namespace MajordomoTests
                 session.ReplyReady += (s, e) =>
                 {
                     Assert.True(e.HasError());
-                    Assert.That(e.Exception.Message, Is.StringContaining("MDP Version mismatch"));
+                    Assert.That(e.Exception.Message, Does.Contain("MDP Version mismatch"));
                     poller.Stop(); // To unlock the Task.Wait()
                 };
 

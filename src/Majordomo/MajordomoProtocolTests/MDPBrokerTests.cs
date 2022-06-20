@@ -105,7 +105,7 @@ namespace MajordomoTests
                 cts.Cancel ();
                 // check on the logging
                 Assert.That (log.Count, Is.EqualTo (2));
-                Assert.That (log[1], Is.StringContaining ("added to service echo"));
+                Assert.That (log[1], Does.Contain("added to service echo"));
             }
         }
 
@@ -132,7 +132,7 @@ namespace MajordomoTests
                 cts.Cancel ();
                 // check on the logging
                 Assert.That (log.Count, Is.EqualTo (2));
-                Assert.That (log[1], Is.StringContaining ("added to service echo"));
+                Assert.That (log[1], Does.Contain ("added to service echo"));
             }
         }
 
