@@ -632,7 +632,7 @@ namespace MajordomoProtocol
 
         protected virtual void OnDebugInfoReady (MDPLogEventArgs e)
         {
-            DebugInfoReady?.Invoke (this, e);
+            DebugInfoReady?.Invoke(this, e);
         }
 
         private void Log (string info)
