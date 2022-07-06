@@ -72,7 +72,7 @@ namespace MajordomoProtocol
         private bool m_isBound;                                 // true if socket is bound to address
         private bool m_isRunning;                               // true if the broker is running
 
-        private readonly object m_syncRoot = new object ();     // used as synchronization object for Purge ()
+        private readonly object m_syncRoot = new object();     // used as synchronization object for Purge ()
 
         /// <summary>
         ///     the socket for communicating with clients and workers
@@ -95,7 +95,7 @@ namespace MajordomoProtocol
             set
             {
                 m_heartbeatLiveliness = value;
-                m_heartbeatExpiry = TimeSpan.FromMilliseconds (HeartbeatInterval.TotalMilliseconds * value);
+                m_heartbeatExpiry = TimeSpan.FromMilliseconds(HeartbeatInterval.TotalMilliseconds * value);
             }
         }
 
@@ -115,12 +115,12 @@ namespace MajordomoProtocol
         ///     <para>heartbeat interval 2,500ms</para>
         ///     <para>max retries for waiting on heartbeats 3 times</para>
         /// </summary>
-        private MDPBroker ()
+        private MDPBroker()
         {
-            Socket = new RouterSocket ();
-            m_services = new List<Service> ();
-            m_knownWorkers = new List<Worker> ();
-            m_heartbeatInterval = TimeSpan.FromMilliseconds (2500); // otherwise the expiry would be 0(!)
+            Socket = new RouterSocket();
+            m_services = new List<Service>();
+            m_knownWorkers = new List<Worker>();
+            m_heartbeatInterval = TimeSpan.FromMilliseconds(2500); // otherwise the expiry would be 0(!)
             HeartbeatLiveliness = 3;                    // so m_heartbeatExpiry = value * m_heartbeatInterval = 7.500 ms
             m_isBound = false;
         }
@@ -130,14 +130,14 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="endpoint">a valid NetMQ endpoint for the broker</param>
         /// <param name="heartbeatInterval">the interval between heartbeats in milliseconds, default 2,500ms</param>
-        public MDPBroker ([NotNull] string endpoint, int heartbeatInterval = 0)
-            : this ()
+        public MDPBroker([NotNull] string endpoint, int heartbeatInterval = 0)
+            : this()
         {
-            if (string.IsNullOrWhiteSpace (endpoint))
-                throw new ArgumentNullException (nameof(endpoint), "An 'endpoint' were the broker binds to must be given!");
+            if (string.IsNullOrWhiteSpace(endpoint))
+                throw new ArgumentNullException(nameof(endpoint), "An 'endpoint' were the broker binds to must be given!");
 
             if (heartbeatInterval > 0)
-                m_heartbeatInterval = TimeSpan.FromMilliseconds (heartbeatInterval);
+                m_heartbeatInterval = TimeSpan.FromMilliseconds(heartbeatInterval);
 
             m_endpoint = endpoint;
         }
@@ -149,28 +149,28 @@ namespace MajordomoProtocol
         /// <remarks>
         ///     broker uses the same endpoint to communicate with clients and workers(!)
         /// </remarks>
-        public void Bind ()
+        public void Bind()
         {
             if (m_isBound)
                 return;
 
             try
             {
-                Socket.Bind (m_endpoint);
+                Socket.Bind(m_endpoint);
             }
             catch (Exception e)
             {
                 var error = $"The bind operation failed. Most likely because 'endpoint' ({m_endpoint}) is malformed!";
                 error += $"\nMessage: {e.Message}";
-                throw new ApplicationException (error);
+                throw new ApplicationException(error);
             }
 
             m_isBound = true;
 
-            var major = Assembly.GetExecutingAssembly ().GetName ().Version.Major;
-            var minor = Assembly.GetExecutingAssembly ().GetName ().Version.Minor;
+            var major = Assembly.GetExecutingAssembly().GetName().Version.Major;
+            var minor = Assembly.GetExecutingAssembly().GetName().Version.Minor;
 
-            Log ($"MDP Broker/{major}.{minor} is active at {m_endpoint}");
+            Log($"MDP Broker/{major}.{minor} is active at {m_endpoint}");
         }
 
         /// <summary>
@@ -178,20 +178,20 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="endpoint">the new endpoint to bind to</param>
         /// <exception cref="InvalidOperationException">Can not change binding while operating!</exception>
-        public void Bind ([NotNull] string endpoint)
+        public void Bind([NotNull] string endpoint)
         {
             if (m_isRunning)
-                throw new InvalidOperationException ("Can not change binding while operating!");
+                throw new InvalidOperationException("Can not change binding while operating!");
 
             if (m_endpoint == endpoint && m_isBound)
                 return;
 
             if (m_isBound)
-                Socket.Unbind (m_endpoint);
+                Socket.Unbind(m_endpoint);
 
             m_endpoint = endpoint;
 
-            Bind ();
+            Bind();
         }
 
         /// <summary>
@@ -199,38 +199,38 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="token">CancellationToken to cancel the method</param>
         /// <exception cref="InvalidOperationException">Can't start same broker more than once!</exception>
-        public async Task Run (CancellationToken token)
+        public async Task Run(CancellationToken token)
         {
             if (m_isRunning)
-                throw new InvalidOperationException ("Can't start same broker more than once!");
+                throw new InvalidOperationException("Can't start same broker more than once!");
 
             if (!m_isBound)
-                Bind ();
+                Bind();
 
             m_isRunning = true;
 
-            using (var poller = new NetMQPoller ())
+            using (var poller = new NetMQPoller())
             {
                 Socket.ReceiveReady += ProcessReceivedMessage;
                 // get timer for scheduling heartbeat
-                var timer = new NetMQTimer (HeartbeatInterval);
+                var timer = new NetMQTimer(HeartbeatInterval);
                 // send every 'HeartbeatInterval' a heartbeat to all not expired workers
-                timer.Elapsed += (s, e) => SendHeartbeat ();
+                timer.Elapsed += (s, e) => SendHeartbeat();
 
-                poller.Add (Socket);
-                poller.Add (timer);
+                poller.Add(Socket);
+                poller.Add(timer);
 
-                Log ("Starting to listen for incoming messages ...");
+                Log("Starting to listen for incoming messages ...");
 
                 // start the poller and wait for the return, which will happen once token is
                 // signalling Cancel(!)
-                await Task.Factory.StartNew (poller.Run, token);
+                await Task.Factory.StartNew(poller.Run, token);
 
-                Log ("... Stopped!");
+                Log("... Stopped!");
 
                 // clean up
-                poller.Remove (timer);
-                poller.Remove (Socket);
+                poller.Remove(timer);
+                poller.Remove(Socket);
                 // unregister event handler
                 Socket.ReceiveReady -= ProcessReceivedMessage;
             }
@@ -243,38 +243,38 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="token">CancellationToken to cancel the method</param>
         /// <exception cref="InvalidOperationException">Can't start same broker more than once!</exception>
-        public void RunSynchronous (CancellationToken token)
+        public void RunSynchronous(CancellationToken token)
         {
             if (m_isRunning)
-                throw new InvalidOperationException ("Can't start same broker more than once!");
+                throw new InvalidOperationException("Can't start same broker more than once!");
 
             if (!m_isBound)
-                Bind ();
+                Bind();
 
             m_isRunning = true;
 
-            using (var poller = new NetMQPoller ())
+            using (var poller = new NetMQPoller())
             {
                 Socket.ReceiveReady += ProcessReceivedMessage;
                 // get timer for scheduling heartbeat
-                var timer = new NetMQTimer (HeartbeatInterval);
+                var timer = new NetMQTimer(HeartbeatInterval);
                 // send every 'HeartbeatInterval' a heartbeat to all not expired workers
-                timer.Elapsed += (s, e) => SendHeartbeat ();
+                timer.Elapsed += (s, e) => SendHeartbeat();
 
-                poller.Add (Socket);
-                poller.Add (timer);
+                poller.Add(Socket);
+                poller.Add(timer);
 
-                Log ("Starting to listen for incoming messages ...");
+                Log("Starting to listen for incoming messages ...");
 
                 // start the poller and wait for the return, which will happen once token is
                 // signalling Cancel(!)
-                Task.Factory.StartNew (poller.Run, token).Wait ();
+                Task.Factory.StartNew(poller.Run, token).Wait();
 
-                Log ("... Stopped!");
+                Log("... Stopped!");
 
                 // clean up
-                poller.Remove (timer);
-                poller.Remove (Socket);
+                poller.Remove(timer);
+                poller.Remove(Socket);
                 // unregister event handler
                 Socket.ReceiveReady -= ProcessReceivedMessage;
             }
@@ -285,14 +285,14 @@ namespace MajordomoProtocol
         /// <summary>
         ///     send a heartbeat to all known active worker
         /// </summary>
-        public void SendHeartbeat ()
+        public void SendHeartbeat()
         {
-            Purge ();
+            Purge();
 
             foreach (var worker in m_knownWorkers)
-                WorkerSend (worker, MDPCommand.Heartbeat, null);
+                WorkerSend(worker, MDPCommand.Heartbeat, null);
 
-            DebugLog ("Sent HEARTBEAT to all worker!");
+            DebugLog("Sent HEARTBEAT to all worker!");
         }
 
         /// <summary>
@@ -300,24 +300,24 @@ namespace MajordomoProtocol
         ///     CLIENT  ->  [sender adr][e][protocol header][service name][request]
         ///     WORKER  ->  [sender adr][e][protocol header][mdp command][reply]
         /// </summary>
-        private void ProcessReceivedMessage (object sender, NetMQSocketEventArgs e)
+        private void ProcessReceivedMessage(object sender, NetMQSocketEventArgs e)
         {
-            var msg = e.Socket.ReceiveMultipartMessage ();
+            var msg = e.Socket.ReceiveMultipartMessage();
 
-            DebugLog ($"Received: {msg}");
+            DebugLog($"Received: {msg}");
 
-            var senderFrame = msg.Pop ();               // [e][protocol header][service or command][data]
-            var empty = msg.Pop ();                     // [protocol header][service or command][data]
-            var headerFrame = msg.Pop ();               // [service or command][data]
-            var header = headerFrame.ConvertToString ();
+            var senderFrame = msg.Pop();               // [e][protocol header][service or command][data]
+            var empty = msg.Pop();                     // [protocol header][service or command][data]
+            var headerFrame = msg.Pop();               // [service or command][data]
+            var header = headerFrame.ConvertToString();
 
             if (header == MDPConstants.MDP_CLIENT_HEADER)
-                ProcessClientMessage (senderFrame, msg);
+                ProcessClientMessage(senderFrame, msg);
             else
                 if (header == MDPConstants.MDP_WORKER_HEADER)
-                    ProcessWorkerMessage (senderFrame, msg);
-                else
-                    Log (string.Format ("ERROR - message with invalid protocol header!"));
+                ProcessWorkerMessage(senderFrame, msg);
+            else
+                Log(string.Format("ERROR - message with invalid protocol header!"));
         }
 
         /// <summary>
@@ -325,23 +325,23 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="sender">the sender identity frame</param>
         /// <param name="message">the message sent</param>
-        public void ProcessWorkerMessage ([NotNull] NetMQFrame sender, [NotNull] NetMQMessage message)
+        public void ProcessWorkerMessage([NotNull] NetMQFrame sender, [NotNull] NetMQMessage message)
         {
             // should be
             // READY        [mdp command][service name]
             // REPLY        [mdp command][client adr][e][reply]
             // HEARTBEAT    [mdp command]
             if (message.FrameCount < 1)
-                throw new ApplicationException ("Message with too few frames received.");
+                throw new ApplicationException("Message with too few frames received.");
 
-            var mdpCommand = message.Pop ();                // get the mdp command frame it should have only one byte payload
+            var mdpCommand = message.Pop();                // get the mdp command frame it should have only one byte payload
 
             if (mdpCommand.BufferSize > 1)
-                throw new ApplicationException ("The MDPCommand frame had more than one byte!");
+                throw new ApplicationException("The MDPCommand frame had more than one byte!");
 
-            var cmd = (MDPCommand) mdpCommand.Buffer[0];    // [service name] or [client adr][e][reply]
-            var workerId = sender.ConvertToString ();       // get the id of the worker sending the message
-            var workerIsKnown = m_knownWorkers.Any (w => w.Id == workerId);
+            var cmd = (MDPCommand)mdpCommand.Buffer[0];    // [service name] or [client adr][e][reply]
+            var workerId = sender.ConvertToString();       // get the id of the worker sending the message
+            var workerIsKnown = m_knownWorkers.Any(w => w.Id == workerId);
 
             switch (cmd)
             {
@@ -351,53 +351,53 @@ namespace MajordomoProtocol
                         // then it is not the first command in session -> WRONG
                         // if the worker is know to a service, remove it from that
                         // service and a potential waiting list therein
-                        RemoveWorker (m_knownWorkers.Find (w => w.Id == workerId));
+                        RemoveWorker(m_knownWorkers.Find(w => w.Id == workerId));
 
-                        Log ($"READY out of sync. Removed worker {workerId}.");
+                        Log($"READY out of sync. Removed worker {workerId}.");
                     }
                     else
                     {
                         // now a new - not know - worker sent his READY initiation message
                         // attach worker to service and mark as idle - worker has send READY as first message
-                        var serviceName = message.Pop ().ConvertToString ();
-                        var service = ServiceRequired (serviceName);
+                        var serviceName = message.Pop().ConvertToString();
+                        var service = ServiceRequired(serviceName);
                         // create a new worker and set the service it belongs to
-                        var worker = new Worker (workerId, sender, service);
+                        var worker = new Worker(workerId, sender, service);
                         // now add the worker
-                        AddWorker (worker, service);
+                        AddWorker(worker, service);
 
-                        Log ($"READY processed. Worker {workerId} added to service {serviceName}");
+                        Log($"READY processed. Worker {workerId} added to service {serviceName}");
                     }
                     break;
                 case MDPCommand.Reply:
                     if (workerIsKnown)
                     {
-                        var worker = m_knownWorkers.Find (w => w.Id == workerId);
+                        var worker = m_knownWorkers.Find(w => w.Id == workerId);
                         // remove the client return envelope and insert the protocol header
                         // and service name then rewrap the envelope
-                        var client = UnWrap (message);                  // [reply]
-                        message.Push (worker.Service.Name);             // [service name][reply]
-                        message.Push (MDPConstants.MDP_CLIENT_HEADER);  // [protocol header][service name][reply]
-                        var reply = Wrap (client, message);             // [client adr][e][protocol header][service name][reply]
+                        var client = UnWrap(message);                  // [reply]
+                        message.Push(worker.Service.Name);             // [service name][reply]
+                        message.Push(MDPConstants.MDP_CLIENT_HEADER);  // [protocol header][service name][reply]
+                        var reply = Wrap(client, message);             // [client adr][e][protocol header][service name][reply]
 
-                        Socket.SendMultipartMessage (reply);
+                        Socket.SendMultipartMessage(reply);
 
-                        DebugLog ($"REPLY from {workerId} received and send to {client.ConvertToString()} -> {message}");
+                        DebugLog($"REPLY from {workerId} received and send to {client.ConvertToString()} -> {message}");
                         // relist worker for further requests
-                        AddWorker (worker, worker.Service);
+                        AddWorker(worker, worker.Service);
                     }
                     break;
                 case MDPCommand.Heartbeat:
                     if (workerIsKnown)
                     {
-                        var worker = m_knownWorkers.Find (w => w.Id == workerId);
+                        var worker = m_knownWorkers.Find(w => w.Id == workerId);
                         worker.Expiry = DateTime.UtcNow + m_heartbeatExpiry;
 
-                        DebugLog ($"HEARTBEAT from {workerId} received.");
+                        DebugLog($"HEARTBEAT from {workerId} received.");
                     }
                     break;
                 default:
-                    Log ("ERROR: Invalid MDPCommand received or message received!");
+                    Log("ERROR: Invalid MDPCommand received or message received!");
                     break;
             }
         }
@@ -407,17 +407,17 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="sender">client identity</param>
         /// <param name="message">the message received</param>
-        public void ProcessClientMessage ([NotNull] NetMQFrame sender, [NotNull] NetMQMessage message)
+        public void ProcessClientMessage([NotNull] NetMQFrame sender, [NotNull] NetMQMessage message)
         {
             // should be
             // REQUEST      [service name][request] OR
             // DISCOVER     ['mmi.service'][service to discover]
             if (message.FrameCount < 2)
-                throw new ArgumentException ("The message is malformed!");
+                throw new ArgumentException("The message is malformed!");
 
-            var serviceFrame = message.Pop ();                 // [request] OR [service to discover]
-            var serviceName = serviceFrame.ConvertToString ();
-            var request = Wrap (sender, message);              // [CLIENT ADR][e][request] OR [service name]
+            var serviceFrame = message.Pop();                 // [request] OR [service to discover]
+            var serviceName = serviceFrame.ConvertToString();
+            var request = Wrap(sender, message);              // [CLIENT ADR][e][request] OR [service name]
 
             // if it is a "mmi.service" request, handle it locally
             // this request searches for a service and returns a code indicating the result of that search
@@ -427,44 +427,44 @@ namespace MajordomoProtocol
             if (serviceName == "mmi.service")
             {
                 var returnCode = MmiCode.Unknown;
-                var name = request.Last.ConvertToString ();
+                var name = request.Last.ConvertToString();
 
-                if (m_services.Exists (s => s.Name == name))
+                if (m_services.Exists(s => s.Name == name))
                 {
-                    var svc = m_services.Find (s => s.Name == name);
+                    var svc = m_services.Find(s => s.Name == name);
 
-                    returnCode = svc.DoWorkersExist () ? MmiCode.Ok : MmiCode.Pending;
+                    returnCode = svc.DoWorkersExist() ? MmiCode.Ok : MmiCode.Pending;
                 }
                 // set the return code to be the last frame in the message
-                var rc = new NetMQFrame (returnCode.ToString ());// [return code]
+                var rc = new NetMQFrame(returnCode.ToString());// [return code]
 
-                request.RemoveFrame (message.Last);             // [CLIENT ADR][e] -> [service name]
-                request.Append (serviceName);                   // [CLIENT ADR][e] <- ['mmi.service']
-                request.Append (rc);                            // [CLIENT ADR][e]['mmi.service'] <- [return code]
+                request.RemoveFrame(message.Last);             // [CLIENT ADR][e] -> [service name]
+                request.Append(serviceName);                   // [CLIENT ADR][e] <- ['mmi.service']
+                request.Append(rc);                            // [CLIENT ADR][e]['mmi.service'] <- [return code]
 
                 // remove client return envelope and insert
                 // protocol header and service name,
                 // then rewrap envelope
-                var client = UnWrap (request);                  // ['mmi.service'][return code]
-                request.Push (MDPConstants.MDP_CLIENT_HEADER);                 // [protocol header]['mmi.service'][return code]
-                var reply = Wrap (client, request);             // [CLIENT ADR][e][protocol header]['mmi.service'][return code]
+                var client = UnWrap(request);                  // ['mmi.service'][return code]
+                request.Push(MDPConstants.MDP_CLIENT_HEADER);                 // [protocol header]['mmi.service'][return code]
+                var reply = Wrap(client, request);             // [CLIENT ADR][e][protocol header]['mmi.service'][return code]
 
                 // send to back to CLIENT(!)
-                Socket.SendMultipartMessage (reply);
+                Socket.SendMultipartMessage(reply);
 
-                DebugLog ($"MMI request processed. Answered {reply}");
+                DebugLog($"MMI request processed. Answered {reply}");
             }
             else
             {
                 // get the requested service object
-                var service = ServiceRequired (serviceName);
+                var service = ServiceRequired(serviceName);
 
                 // a standard REQUEST received
-                DebugLog ($"Dispatching -> {request} to {serviceName}");
+                DebugLog($"Dispatching -> {request} to {serviceName}");
 
                 // send to a worker offering the requested service
                 // will add command, header and worker adr envelope
-                ServiceDispatch (service, request);             // [CLIENT ADR][e][request]
+                ServiceDispatch(service, request);             // [CLIENT ADR][e][request]
             }
         }
 
@@ -479,9 +479,9 @@ namespace MajordomoProtocol
         ///     we must use a lock to guarantee that only one thread will have
         ///     access to the purging at a time!
         /// </remarks>
-        private void Purge ()
+        private void Purge()
         {
-            DebugLog ("start purging for all services");
+            DebugLog("start purging for all services");
 
             lock (m_syncRoot)
             {
@@ -494,7 +494,7 @@ namespace MajordomoProtocol
                             // any following worker will be younger -> we're done for the service
                             break;
 
-                        RemoveWorker (worker);
+                        RemoveWorker(worker);
                     }
                 }
             }
@@ -505,23 +505,23 @@ namespace MajordomoProtocol
         ///     if not already known
         ///     it dispatches pending requests for this service as well
         /// </summary>
-        private void AddWorker (Worker worker, Service service)
+        private void AddWorker(Worker worker, Service service)
         {
             worker.Expiry = DateTime.UtcNow + m_heartbeatExpiry;
 
-            if (!m_knownWorkers.Contains (worker))
+            if (!m_knownWorkers.Contains(worker))
             {
-                m_knownWorkers.Add (worker);
+                m_knownWorkers.Add(worker);
 
-                DebugLog ($"added {worker.Id} to known worker.");
+                DebugLog($"added {worker.Id} to known worker.");
             }
 
-            service.AddWaitingWorker (worker);
+            service.AddWaitingWorker(worker);
 
-            DebugLog ($"added {worker.Id} to waiting worker in service {service.Name}.");
+            DebugLog($"added {worker.Id} to waiting worker in service {service.Name}.");
 
             // get pending messages out
-            ServiceDispatch (service, null);
+            ServiceDispatch(service, null);
         }
 
         /// <summary>
@@ -530,41 +530,41 @@ namespace MajordomoProtocol
         ///     potentially from the waiting list therein
         /// </summary>
         /// <param name="worker"></param>
-        private void RemoveWorker (Worker worker)
+        private void RemoveWorker(Worker worker)
         {
-            if (m_services.Contains (worker.Service))
+            if (m_services.Contains(worker.Service))
             {
-                var service = m_services.Find (s => s.Equals (worker.Service));
-                service.DeleteWorker (worker);
+                var service = m_services.Find(s => s.Equals(worker.Service));
+                service.DeleteWorker(worker);
 
-                DebugLog ($"removed worker {worker.Id} from service {service.Name}");
+                DebugLog($"removed worker {worker.Id} from service {service.Name}");
             }
 
-            m_knownWorkers.Remove (worker);
+            m_knownWorkers.Remove(worker);
 
-            DebugLog ($"removed {worker.Id} from known worker.");
+            DebugLog($"removed {worker.Id} from known worker.");
         }
 
         /// <summary>
         ///     sends a message to a specific worker with a specific command
         ///     and add an option option
         /// </summary>
-        private void WorkerSend (Worker worker, MDPCommand command, NetMQMessage message, string option = null)
+        private void WorkerSend(Worker worker, MDPCommand command, NetMQMessage message, string option = null)
         {
-            var msg = message ?? new NetMQMessage ();
+            var msg = message ?? new NetMQMessage();
 
             // stack protocol envelope to start of message
-            if (!ReferenceEquals (option, null))
-                msg.Push (option);
+            if (!ReferenceEquals(option, null))
+                msg.Push(option);
 
-            msg.Push (new[] { (byte) command });
-            msg.Push (MDPConstants.MDP_WORKER_HEADER);
+            msg.Push(new[] { (byte)command });
+            msg.Push(MDPConstants.MDP_WORKER_HEADER);
             // stack routing envelope
-            var request = Wrap (worker.Identity, msg);
+            var request = Wrap(worker.Identity, msg);
 
-            DebugLog ($"Sending {request}");
+            DebugLog($"Sending {request}");
             // send to worker
-            Socket.SendMultipartMessage (request);
+            Socket.SendMultipartMessage(request);
         }
 
         /// <summary>
@@ -573,13 +573,13 @@ namespace MajordomoProtocol
         /// </summary>
         /// <param name="serviceName">the service requested</param>
         /// <returns>the requested service object</returns>
-        private Service ServiceRequired (string serviceName)
+        private Service ServiceRequired(string serviceName)
         {
-            var svc = m_services.Exists (s => s.Name == serviceName)
-                          ? m_services.Find (s => s.Name == serviceName)
-                          : new Service (serviceName);
+            var svc = m_services.Exists(s => s.Name == serviceName)
+                          ? m_services.Find(s => s.Name == serviceName)
+                          : new Service(serviceName);
             // add service to the known services
-            m_services.Add (svc);
+            m_services.Add(svc);
 
             return svc;
         }
@@ -594,30 +594,30 @@ namespace MajordomoProtocol
         ///             get the next pending request
         ///             send to the worker
         /// </summary>
-        private void ServiceDispatch (Service service, NetMQMessage message)
+        private void ServiceDispatch(Service service, NetMQMessage message)
         {
-            DebugLog ($"Service [{service.Name}] dispatches -> {(message == null ? "PURGING" : "message = " + message)}");
+            DebugLog($"Service [{service.Name}] dispatches -> {(message == null ? "PURGING" : "message = " + message)}");
 
             // if message is 'null' just send pending requests
-            if (!ReferenceEquals (message, null))
-                service.AddRequest (message);
+            if (!ReferenceEquals(message, null))
+                service.AddRequest(message);
 
             // remove all expired workers!
-            Purge ();
+            Purge();
 
             // if there are requests pending and workers are waiting dispatch the requests
             // as long as there are workers and requests
-            while (service.CanDispatchRequests ())
+            while (service.CanDispatchRequests())
             {
-                var worker = service.GetNextWorker ();
+                var worker = service.GetNextWorker();
 
                 if (service.PendingRequests.Count > 0)
                 {
-                    var request = service.GetNextRequest ();
+                    var request = service.GetNextRequest();
 
-                    DebugLog ($"Service Dispatch -> pending request {request} to {worker.Id}");
+                    DebugLog($"Service Dispatch -> pending request {request} to {worker.Id}");
 
-                    WorkerSend (worker, MDPCommand.Request, request);
+                    WorkerSend(worker, MDPCommand.Request, request);
                 }
                 else
                     // no more requests -> we're done
@@ -625,30 +625,30 @@ namespace MajordomoProtocol
             }
         }
 
-        protected virtual void OnLogInfoReady (MDPLogEventArgs e)
+        protected virtual void OnLogInfoReady(MDPLogEventArgs e)
         {
-            LogInfoReady?.Invoke (this, e);
+            LogInfoReady?.Invoke(this, e);
         }
 
-        protected virtual void OnDebugInfoReady (MDPLogEventArgs e)
+        protected virtual void OnDebugInfoReady(MDPLogEventArgs e)
         {
             DebugInfoReady?.Invoke(this, e);
         }
 
-        private void Log (string info)
+        private void Log(string info)
         {
-            if (string.IsNullOrWhiteSpace (info))
+            if (string.IsNullOrWhiteSpace(info))
                 return;
 
-            OnLogInfoReady (new MDPLogEventArgs { Info = "[MDP BROKER] " + info });
+            OnLogInfoReady(new MDPLogEventArgs { Info = "[MDP BROKER] " + info });
         }
 
-        private void DebugLog (string info)
+        private void DebugLog(string info)
         {
-            if (string.IsNullOrWhiteSpace (info))
+            if (string.IsNullOrWhiteSpace(info))
                 return;
 
-            OnDebugInfoReady (new MDPLogEventArgs { Info = "[MDP BROKER DEBUG] " + info });
+            OnDebugInfoReady(new MDPLogEventArgs { Info = "[MDP BROKER DEBUG] " + info });
         }
 
         /// <summary>
@@ -656,12 +656,12 @@ namespace MajordomoProtocol
         ///
         ///     CHANGES message!
         /// </summary>
-        private static NetMQFrame UnWrap (NetMQMessage message)
+        private static NetMQFrame UnWrap(NetMQMessage message)
         {
-            var frame = message.Pop ();
+            var frame = message.Pop();
 
             if (message.First == NetMQFrame.Empty)
-                message.Pop ();
+                message.Pop();
 
             return frame;
         }
@@ -669,14 +669,14 @@ namespace MajordomoProtocol
         /// <summary>
         ///     adds an empty frame and a specified frame to a message
         /// </summary>
-        private static NetMQMessage Wrap (NetMQFrame frame, NetMQMessage message)
+        private static NetMQMessage Wrap(NetMQFrame frame, NetMQMessage message)
         {
-            var result = new NetMQMessage (message);
+            var result = new NetMQMessage(message);
 
             if (frame.BufferSize > 0)
             {
-                result.Push (NetMQFrame.Empty);
-                result.Push (frame);
+                result.Push(NetMQFrame.Empty);
+                result.Push(frame);
             }
 
             return result;
@@ -684,17 +684,17 @@ namespace MajordomoProtocol
 
         #region IDisposable
 
-        public void Dispose ()
+        public void Dispose()
         {
-            Dispose (true);
-            GC.SuppressFinalize (this);
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose (bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                Socket.Dispose ();
+                Socket.Dispose();
             }
             // get rid of unmanaged resources
         }
