@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-
+using System.Runtime.CompilerServices;
 using NetMQ;
 
+[assembly: InternalsVisibleTo("MajordomoTests")]
 namespace MajordomoProtocol
 {
     /// <summary>

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -10,6 +11,7 @@ using NetMQ;
 
 using TitanicCommons;
 
+[assembly: InternalsVisibleTo("TitanicPatternTests")]
 namespace TitanicProtocol
 {
     /// <summary>
@@ -36,21 +38,21 @@ namespace TitanicProtocol
         /// <summary>
         ///     will throw an InvalidOperationException
         /// </summary>
-        public string TitanicDirectory { get { throw new InvalidOperationException ("In-Memory IO does not provide a directory."); } }
+        public string TitanicDirectory { get { throw new InvalidOperationException("In-Memory IO does not provide a directory."); } }
 
         /// <summary>
         ///     will throw an InvalidOperationException
         /// </summary>
-        public string TitanicQueue { get { throw new InvalidOperationException ("In-Memory IO does not provide a file name for the titanic queue."); } }
+        public string TitanicQueue { get { throw new InvalidOperationException("In-Memory IO does not provide a file name for the titanic queue."); } }
 
         internal int NumberOfRequests => m_titanicQueue.Count;
 
         /// <summary>
         ///     ctor
         /// </summary>
-        public TitanicMemoryIO ()
+        public TitanicMemoryIO()
         {
-            m_titanicQueue = new ConcurrentDictionary<Guid, RequestEntry> ();
+            m_titanicQueue = new ConcurrentDictionary<Guid, RequestEntry>();
         }
 
         #region REQUEST/REPLY QUEUE I/O HANDLING
@@ -61,11 +63,9 @@ namespace TitanicProtocol
         /// <param name="id"></param>
         /// <returns>a request entry or default(RequestEntry) if no request entry with the id exists</returns>
         /// <exception cref="ArgumentNullException"><paramref name="id" /> is a 'null' reference.</exception>
-        public RequestEntry GetRequestEntry (Guid id)
+        public RequestEntry GetRequestEntry(Guid id)
         {
-            RequestEntry entry;
-
-            return m_titanicQueue.TryGetValue (id, out entry) ? entry : default (RequestEntry);
+            return m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry : default;
         }
 
         /// <summary>
@@ -73,12 +73,12 @@ namespace TitanicProtocol
         /// </summary>
         /// <param name="predicate">the predicate to satisfy</param>
         /// <returns>a sequence of request entries if any or an empty sequence</returns>
-        public IEnumerable<RequestEntry> GetRequestEntries (Func<RequestEntry, bool> predicate)
+        public IEnumerable<RequestEntry> GetRequestEntries(Func<RequestEntry, bool> predicate)
         {
             if (m_titanicQueue.IsEmpty)
-                return default (IEnumerable<RequestEntry>);
+                return default(IEnumerable<RequestEntry>);
 
-            var result = m_titanicQueue.Values.Where (predicate).ToArray ();
+            var result = m_titanicQueue.Values.Where(predicate).ToArray();
 
             return result.Length > 0 ? result : new RequestEntry[0];
         }
@@ -88,9 +88,9 @@ namespace TitanicProtocol
         ///     only State = (Is_Pending OR Is_Processed) are considered
         /// </summary>
         /// <returns>sequence of request entries</returns>
-        public IEnumerable<RequestEntry> GetNotClosedRequestEntries ()
+        public IEnumerable<RequestEntry> GetNotClosedRequestEntries()
         {
-            return GetRequestEntries (e => e.State != RequestEntry.Is_Closed);
+            return GetRequestEntries(e => e.State != RequestEntry.Is_Closed);
         }
 
         /// <summary>
@@ -99,12 +99,14 @@ namespace TitanicProtocol
         /// <param name="entry">the request entry to save</param>
         /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="entry.RequestId" /> is a 'null' reference.</exception>
-        public void SaveRequestEntry (RequestEntry entry)
+        public void SaveRequestEntry(RequestEntry entry)
         {
-            if (ReferenceEquals (entry, null))
-                throw new ArgumentNullException (nameof(entry), "The RequestEntry to save must not be null!");
+            if (entry is null)
+            {
+                throw new ArgumentNullException(nameof(entry), "The RequestEntry to save must not be null!");
+            }
 
-            m_titanicQueue.AddOrUpdate (entry.RequestId, entry, (id, e) => entry);
+            m_titanicQueue.AddOrUpdate(entry.RequestId, entry, (id, e) => entry);
         }
 
         /// <summary>
@@ -112,18 +114,18 @@ namespace TitanicProtocol
         /// </summary>
         /// <param name="id">the id of the request</param>
         /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveNewRequestEntry (Guid id)
+        public void SaveNewRequestEntry(Guid id)
         {
             // if it is already processed or closed (but not yet deleted) -> forget it
-            if (ExistsMessage (TitanicOperation.Reply, id) || ExistsMessage (TitanicOperation.Close, id))
+            if (ExistsMessage(TitanicOperation.Reply, id) || ExistsMessage(TitanicOperation.Close, id))
                 return;
 
             // the entry could already exist - so check and use it if so
-            var entry = ExistsMessage (TitanicOperation.Request, id)
-                            ? GetRequestEntry (id)
+            var entry = ExistsMessage(TitanicOperation.Request, id)
+                            ? GetRequestEntry(id)
                             : new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending };
 
-            SaveRequestEntry (entry);
+            SaveRequestEntry(entry);
         }
 
         /// <summary>
@@ -132,11 +134,11 @@ namespace TitanicProtocol
         /// <param name="id">the id of the request</param>
         /// <param name="request">the request to save</param>
         /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveNewRequestEntry (Guid id, NetMQMessage request)
+        public void SaveNewRequestEntry(Guid id, NetMQMessage request)
         {
             var entry = new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending, Request = request };
 
-            SaveRequestEntry (entry);
+            SaveRequestEntry(entry);
         }
 
         /// <summary>
@@ -144,24 +146,22 @@ namespace TitanicProtocol
         /// </summary>
         /// <param name="entry">the entry to save</param>
         /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveProcessedRequestEntry (RequestEntry entry)
+        public void SaveProcessedRequestEntry(RequestEntry entry)
         {
             entry.State = RequestEntry.Is_Processed;
 
-            SaveRequestEntry (entry);
+            SaveRequestEntry(entry);
         }
 
         /// <summary>
         ///     remove a request from the queue
         /// </summary>
         /// <param name="id">the GUID of the request to close</param>
-        public void CloseRequest (Guid id)
+        public void CloseRequest(Guid id)
         {
             if (id == Guid.Empty)
                 return;
-
-            RequestEntry entry;
-            m_titanicQueue.TryRemove (id, out entry);
+            m_titanicQueue.TryRemove(id, out _);
         }
 
         #endregion
@@ -173,29 +173,24 @@ namespace TitanicProtocol
         /// </summary>
         /// <param name="id">the guid of the message to read, must not be empty</param>
         /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
-        public NetMQMessage GetMessage (TitanicOperation op, Guid id)
-        {
-            RequestEntry entry;
-
-            return m_titanicQueue.TryGetValue (id, out entry) ? entry.Request : new NetMQMessage ();
-        }
+        public NetMQMessage GetMessage(TitanicOperation op, Guid id) => m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry.Request : new NetMQMessage();
 
         /// <summary>
         ///     read a NetMQ message identified by a GUID asynchronously
         /// </summary>
         /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
         /// <param name="id">the guid of the message to read</param>
-        public Task<NetMQMessage> GetMessageAsync (TitanicOperation op, Guid id)
+        public Task<NetMQMessage> GetMessageAsync(TitanicOperation op, Guid id)
         {
-            var tcs = new TaskCompletionSource<NetMQMessage> ();
+            var tcs = new TaskCompletionSource<NetMQMessage>();
 
             try
             {
-                tcs.SetResult (GetMessage (op, id));
+                tcs.SetResult(GetMessage(op, id));
             }
             catch (Exception ex)
             {
-                tcs.SetException (ex);
+                tcs.SetException(ex);
             }
 
             return tcs.Task;
@@ -208,16 +203,16 @@ namespace TitanicProtocol
         /// <param name="id">the guid of the message to save</param>
         /// <param name="message">the message to save</param>
         /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public bool SaveMessage (TitanicOperation op, Guid id, NetMQMessage message)
+        public bool SaveMessage(TitanicOperation op, Guid id, NetMQMessage message)
         {
             var entry = new RequestEntry
-                        {
-                            RequestId = id,
-                            Request = message,
-                            State = GetStateFromOperation (op)
-                        };
+            {
+                RequestId = id,
+                Request = message,
+                State = GetStateFromOperation(op)
+            };
 
-            m_titanicQueue.AddOrUpdate (id, entry, (i, oldValue) => entry);
+            m_titanicQueue.AddOrUpdate(id, entry, (i, oldValue) => entry);
 
             return true;
         }
@@ -228,17 +223,17 @@ namespace TitanicProtocol
         /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
         /// <param name="id">the guid of the message to save</param>
         /// <param name="message">the message to save</param>
-        public Task<bool> SaveMessageAsync (TitanicOperation op, Guid id, NetMQMessage message)
+        public Task<bool> SaveMessageAsync(TitanicOperation op, Guid id, NetMQMessage message)
         {
-            var tcs = new TaskCompletionSource<bool> ();
+            var tcs = new TaskCompletionSource<bool>();
 
             try
             {
-                tcs.SetResult (SaveMessage (op, id, message));
+                tcs.SetResult(SaveMessage(op, id, message));
             }
             catch (Exception ex)
             {
-                tcs.SetException (ex);
+                tcs.SetException(ex);
             }
 
             return tcs.Task;
@@ -253,28 +248,27 @@ namespace TitanicProtocol
         ///         true if it exists and false otherwise and if 'op' is not one 
         ///         of the aforementioned
         /// </returns>
-        public bool ExistsMessage (TitanicOperation op, Guid id)
+        public bool ExistsMessage(TitanicOperation op, Guid id)
         {
             return op != TitanicOperation.Close
-                   && m_titanicQueue.Any (e => e.Value.RequestId == id && e.Value.State == GetStateFromOperation (op));
+                   && m_titanicQueue.Any(e => e.Value.RequestId == id && e.Value.State == GetStateFromOperation(op));
         }
 
         #endregion
 
-        private static byte GetStateFromOperation (TitanicOperation op)
+        private static byte GetStateFromOperation(TitanicOperation op)
         {
             return op == TitanicOperation.Request ? RequestEntry.Is_Pending : RequestEntry.Is_Processed;
         }
 
-        private void Log ([NotNull] string info)
-        {
-            OnLogInfoReady (new TitanicLogEventArgs { Info = info });
-        }
+        public int GetNumberOfRequests() => NumberOfRequests;
+
+        private void Log([NotNull] string info) => OnLogInfoReady(new TitanicLogEventArgs { Info = info });
 
         /// <exception cref="Exception">A delegate callback throws an exception. </exception>
-        protected virtual void OnLogInfoReady (TitanicLogEventArgs e)
+        protected virtual void OnLogInfoReady(TitanicLogEventArgs e)
         {
-            LogInfoReady?.Invoke (this, e);
+            LogInfoReady?.Invoke(this, e);
         }
     }
 }

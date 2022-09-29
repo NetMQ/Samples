@@ -15,281 +15,281 @@ namespace TitanicProtocolTests
     public class TitanicMemoryIOTests
     {
         [Test]
-        public void ctor_CreateObject_ShouldReturnNotNull ()
+        public void ctor_CreateObject_ShouldReturnNotNull()
         {
-            var sut = new TitanicMemoryIO ();
-            sut.Should ().NotBeNull ();
+            var sut = new TitanicMemoryIO();
+            sut.Should().NotBeNull();
         }
 
         #region Handling of REQUESTS
 
         [Test]
-        public void SaveRequestEntry_InvalidParameter_ShouldThrowArgumentNullException ()
+        public void SaveRequestEntry_InvalidParameter_ShouldThrowArgumentNullException()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
-            sut.Invoking (o => o.SaveRequestEntry (null)).Should().Throw<ArgumentNullException> ();
+            sut.Invoking(o => o.SaveRequestEntry(null)).Should().Throw<ArgumentNullException>();
         }
 
         [Test]
-        public void SaveRequestEntry_ValidRequestEntry_ShouldUpdateTheQueue ()
+        public void SaveRequestEntry_ValidRequestEntry_ShouldUpdateTheQueue()
         {
-            var sut = new TitanicMemoryIO ();
-            var request = new NetMQMessage ();
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
+            var request = new NetMQMessage();
+            var id = Guid.NewGuid();
             var entry = new RequestEntry { RequestId = id, Request = request };
 
-            sut.SaveRequestEntry (entry);
+            sut.SaveRequestEntry(entry);
 
-            sut.NumberOfRequests.Should ().Be (1, "because we just added one");
+            sut.GetNumberOfRequests().Should().Be(1, "because we just added one");
 
-            var result = sut.GetRequestEntry (id);
+            var result = sut.GetRequestEntry(id);
 
-            result.RequestId.Should ().Be (id);
+            result.RequestId.Should().Be(id);
         }
 
         [Test]
-        public void SaveRequestEntry_MultipleRequestEntry_ShouldUpdateTheQueue ()
+        public void SaveRequestEntry_MultipleRequestEntry_ShouldUpdateTheQueue()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (new RequestEntry { RequestId = Guid.NewGuid () });
+                sut.SaveRequestEntry(new RequestEntry { RequestId = Guid.NewGuid() });
 
-            sut.NumberOfRequests.Should ().Be (10, "because we just added 10 Requests");
+            sut.GetNumberOfRequests().Should().Be(10, "because we just added 10 Requests");
 
         }
 
         [Test]
-        public void SaveNewRequest_GuidAndRequest_ShouldUpdateQueue ()
+        public void SaveNewRequest_GuidAndRequest_ShouldUpdateQueue()
         {
-            var sut = new TitanicMemoryIO ();
-            var request = new NetMQMessage ();
-            request.Push ("A Request");
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
+            var request = new NetMQMessage();
+            request.Push("A Request");
+            var id = Guid.NewGuid();
             var entry = new RequestEntry { RequestId = id, Request = request };
 
-            sut.SaveRequestEntry (entry);
+            sut.SaveRequestEntry(entry);
 
-            var result = sut.GetRequestEntry (id);
+            var result = sut.GetRequestEntry(id);
 
-            sut.NumberOfRequests.Should ().Be (1, "because we just added one");
-            result.RequestId.Should ().Be (id);
-            result.Request.Should().BeEquivalentTo (request);
-            result.Position.Should ().Be (-1);
-            result.State.Should ().Be (RequestEntry.Is_Pending);
-        }
-
-        [Test]
-        public void SaveNewRequest_GuidOnly_ShouldUpdateQueue ()
-        {
-            var sut = new TitanicMemoryIO ();
-            var request = new NetMQMessage ();
-            var id = Guid.NewGuid ();
-            var entry = new RequestEntry { RequestId = id, Request = request };
-
-            sut.SaveRequestEntry (entry);
-
-            var result = sut.GetRequestEntry (id);
-
-            result.RequestId.Should ().Be (id);
+            sut.GetNumberOfRequests().Should().Be(1, "because we just added one");
+            result.RequestId.Should().Be(id);
             result.Request.Should().BeEquivalentTo(request);
-            result.Position.Should ().Be (-1);
-            result.State.Should ().Be (RequestEntry.Is_Pending);
+            result.Position.Should().Be(-1);
+            result.State.Should().Be(RequestEntry.Is_Pending);
         }
 
         [Test]
-        public void SaveNewRequest_MultipleRequestGuidOnly_ShouldUpdateQueue ()
+        public void SaveNewRequest_GuidOnly_ShouldUpdateQueue()
         {
-            var sut = new TitanicMemoryIO ();
-
-            for (var i = 0; i < 10; i++)
-                sut.SaveNewRequestEntry (Guid.NewGuid ());
-
-            sut.NumberOfRequests.Should ().Be (10);
-        }
-
-        [Test]
-        public void SaveProcessedRequest_ExistingRequestNoRequestData_ShouldUpdateEntryAppropriate ()
-        {
-            var sut = new TitanicMemoryIO ();
-            var request = new NetMQMessage ();
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
+            var request = new NetMQMessage();
+            var id = Guid.NewGuid();
             var entry = new RequestEntry { RequestId = id, Request = request };
 
-            sut.SaveRequestEntry (entry);
-            sut.SaveProcessedRequestEntry (entry);
+            sut.SaveRequestEntry(entry);
 
-            var result = sut.GetRequestEntry (id);
+            var result = sut.GetRequestEntry(id);
 
-            result.RequestId.Should ().Be (id);
+            result.RequestId.Should().Be(id);
             result.Request.Should().BeEquivalentTo(request);
-            result.Position.Should ().Be (-1);
-            result.State.Should ().Be (RequestEntry.Is_Processed);
+            result.Position.Should().Be(-1);
+            result.State.Should().Be(RequestEntry.Is_Pending);
         }
 
         [Test]
-        public void SaveProcessedRequest_ExistingRequestWithRequestData_ShouldUpdateEntryAppropriate ()
+        public void SaveNewRequest_MultipleRequestGuidOnly_ShouldUpdateQueue()
         {
-            var sut = new TitanicMemoryIO ();
-            var request = new NetMQMessage ();
-            request.Push ("Processed Request Data");
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
+
+            for (var i = 0; i < 10; i++)
+                sut.SaveNewRequestEntry(Guid.NewGuid());
+
+            sut.GetNumberOfRequests().Should().Be(10);
+        }
+
+        [Test]
+        public void SaveProcessedRequest_ExistingRequestNoRequestData_ShouldUpdateEntryAppropriate()
+        {
+            var sut = new TitanicMemoryIO();
+            var request = new NetMQMessage();
+            var id = Guid.NewGuid();
             var entry = new RequestEntry { RequestId = id, Request = request };
 
-            sut.SaveRequestEntry (entry);
-            sut.SaveProcessedRequestEntry (entry);
+            sut.SaveRequestEntry(entry);
+            sut.SaveProcessedRequestEntry(entry);
 
-            var result = sut.GetRequestEntry (id);
+            var result = sut.GetRequestEntry(id);
 
-            result.RequestId.Should ().Be (id);
+            result.RequestId.Should().Be(id);
             result.Request.Should().BeEquivalentTo(request);
-            result.Position.Should ().Be (-1);
-            result.State.Should ().Be (RequestEntry.Is_Processed);
+            result.Position.Should().Be(-1);
+            result.State.Should().Be(RequestEntry.Is_Processed);
         }
 
         [Test]
-        public void GetRequestEntry_NotExistingEntry_ShouldReturnDefaultObject ()
+        public void SaveProcessedRequest_ExistingRequestWithRequestData_ShouldUpdateEntryAppropriate()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
+            var request = new NetMQMessage();
+            request.Push("Processed Request Data");
+            var id = Guid.NewGuid();
+            var entry = new RequestEntry { RequestId = id, Request = request };
 
-            sut.GetRequestEntry (Guid.NewGuid ()).Should ().Be (default (RequestEntry));
+            sut.SaveRequestEntry(entry);
+            sut.SaveProcessedRequestEntry(entry);
+
+            var result = sut.GetRequestEntry(id);
+
+            result.RequestId.Should().Be(id);
+            result.Request.Should().BeEquivalentTo(request);
+            result.Position.Should().Be(-1);
+            result.State.Should().Be(RequestEntry.Is_Processed);
         }
 
         [Test]
-        public void GetRequestEntry_ExistingEntry_ShouldReturnDefaultObject ()
+        public void GetRequestEntry_NotExistingEntry_ShouldReturnDefaultObject()
         {
-            var sut = new TitanicMemoryIO ();
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
 
-            sut.SaveRequestEntry (new RequestEntry { RequestId = id });
-
-            var result = sut.GetRequestEntry (id);
-
-            result.RequestId.Should ().Be (id);
-            result.State.Should ().Be (RequestEntry.Is_Pending);
-            result.Position.Should ().Be (-1);
-            result.Request.Should ().BeNull ();
+            sut.GetRequestEntry(Guid.NewGuid()).Should().Be(default(RequestEntry));
         }
 
         [Test]
-        public void GetRequestEntries_NotExistingEntries_ShouldReturnDefaultObject ()
+        public void GetRequestEntry_ExistingEntry_ShouldReturnDefaultObject()
         {
-            var sut = new TitanicMemoryIO ();
-            var id = Guid.NewGuid ();
+            var sut = new TitanicMemoryIO();
+            var id = Guid.NewGuid();
 
-            sut.GetRequestEntries (e => e.RequestId == id).Should().AllBeEquivalentTo (default (IEnumerable<RequestEntry>));
+            sut.SaveRequestEntry(new RequestEntry { RequestId = id });
+
+            var result = sut.GetRequestEntry(id);
+
+            result.RequestId.Should().Be(id);
+            result.State.Should().Be(RequestEntry.Is_Pending);
+            result.Position.Should().Be(-1);
+            result.Request.Should().BeNull();
         }
 
         [Test]
-        public void GetRequestEntries_ExistingEntriesCorrectPredicate_ShouldReturnCorrectSequence ()
+        public void GetRequestEntries_NotExistingEntries_ShouldReturnDefaultObject()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
+            var id = Guid.NewGuid();
+
+            sut.GetRequestEntries(e => e.RequestId == id).Should().AllBeEquivalentTo(default(IEnumerable<RequestEntry>));
+        }
+
+        [Test]
+        public void GetRequestEntries_ExistingEntriesCorrectPredicate_ShouldReturnCorrectSequence()
+        {
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (i % 2 == 0
-                                          ? new RequestEntry { RequestId = Guid.NewGuid (), State = RequestEntry.Is_Processed }
-                                          : new RequestEntry { RequestId = Guid.NewGuid () });
+                sut.SaveRequestEntry(i % 2 == 0
+                                          ? new RequestEntry { RequestId = Guid.NewGuid(), State = RequestEntry.Is_Processed }
+                                          : new RequestEntry { RequestId = Guid.NewGuid() });
 
-            var result = sut.GetRequestEntries (e => e.State == RequestEntry.Is_Processed);
+            var result = sut.GetRequestEntries(e => e.State == RequestEntry.Is_Processed);
 
-            result.Should ().BeOfType (typeof (RequestEntry[]));
-            result.Count ().Should ().Be (5);
-            result.All (e => e.State == RequestEntry.Is_Processed).Should ().BeTrue ();
+            result.Should().BeOfType(typeof(RequestEntry[]));
+            result.Count().Should().Be(5);
+            result.All(e => e.State == RequestEntry.Is_Processed).Should().BeTrue();
         }
 
         [Test]
-        public void GetRequestEntries_ExistingEntriesNoResultPredicate_ShouldReturnDefaultSequence ()
+        public void GetRequestEntries_ExistingEntriesNoResultPredicate_ShouldReturnDefaultSequence()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (i % 2 == 0
-                                          ? new RequestEntry { RequestId = Guid.NewGuid (), State = RequestEntry.Is_Processed }
-                                          : new RequestEntry { RequestId = Guid.NewGuid () });
+                sut.SaveRequestEntry(i % 2 == 0
+                                          ? new RequestEntry { RequestId = Guid.NewGuid(), State = RequestEntry.Is_Processed }
+                                          : new RequestEntry { RequestId = Guid.NewGuid() });
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var result = sut.GetRequestEntries (e => e.State == RequestEntry.Is_Closed);
+            var result = sut.GetRequestEntries(e => e.State == RequestEntry.Is_Closed);
 
-            result.Should ().BeOfType (typeof (RequestEntry[]));
-            result.Count ().Should ().Be (0);
+            result.Should().BeOfType(typeof(RequestEntry[]));
+            result.Count().Should().Be(0);
         }
 
         [Test]
-        public void GetNotClosedEntries_ExistingEntries_ShouldReturnCorrectSequence ()
+        public void GetNotClosedEntries_ExistingEntries_ShouldReturnCorrectSequence()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (i % 3 == 0
-                                          ? new RequestEntry { RequestId = Guid.NewGuid (), State = RequestEntry.Is_Closed }
-                                          : new RequestEntry { RequestId = Guid.NewGuid () });
+                sut.SaveRequestEntry(i % 3 == 0
+                                          ? new RequestEntry { RequestId = Guid.NewGuid(), State = RequestEntry.Is_Closed }
+                                          : new RequestEntry { RequestId = Guid.NewGuid() });
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var result = sut.GetNotClosedRequestEntries ();
+            var result = sut.GetNotClosedRequestEntries();
 
-            result.Count ().Should ().Be (6);
+            result.Count().Should().Be(6);
         }
 
         [Test]
-        public void GetNotClosedEntries_ExistingEntriesNoResult_ShouldReturnCorrectSequence ()
+        public void GetNotClosedEntries_ExistingEntriesNoResult_ShouldReturnCorrectSequence()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (new RequestEntry { RequestId = Guid.NewGuid (), State = RequestEntry.Is_Closed });
+                sut.SaveRequestEntry(new RequestEntry { RequestId = Guid.NewGuid(), State = RequestEntry.Is_Closed });
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var result = sut.GetNotClosedRequestEntries ();
+            var result = sut.GetNotClosedRequestEntries();
 
-            result.Count ().Should ().Be (0);
+            result.Count().Should().Be(0);
         }
 
         [Test]
-        public void CloseRequest_NotExistingRequest_ShouldReturnWithOutChangingQueue ()
+        public void CloseRequest_NotExistingRequest_ShouldReturnWithOutChangingQueue()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveNewRequestEntry (Guid.NewGuid ());
+                sut.SaveNewRequestEntry(Guid.NewGuid());
 
-            var id = Guid.NewGuid ();
+            var id = Guid.NewGuid();
 
-            sut.CloseRequest (id);
+            sut.CloseRequest(id);
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
         }
 
         [Test]
-        public void CloseRequest_NoRequestExisting_ShouldReturn ()
+        public void CloseRequest_NoRequestExisting_ShouldReturn()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
-            sut.CloseRequest (Guid.NewGuid ());
+            sut.CloseRequest(Guid.NewGuid());
         }
 
         [Test]
-        public void CloseRequest_ExistingEntries_ShouldAlterQueueAppropriate ()
+        public void CloseRequest_ExistingEntries_ShouldAlterQueueAppropriate()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
 
             for (var i = 0; i < 10; i++)
-                sut.SaveRequestEntry (i % 3 == 0
-                                          ? new RequestEntry { RequestId = Guid.NewGuid (), State = RequestEntry.Is_Closed }
-                                          : new RequestEntry { RequestId = Guid.NewGuid () });
+                sut.SaveRequestEntry(i % 3 == 0
+                                          ? new RequestEntry { RequestId = Guid.NewGuid(), State = RequestEntry.Is_Closed }
+                                          : new RequestEntry { RequestId = Guid.NewGuid() });
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var result = sut.GetRequestEntries (e => e.State == RequestEntry.Is_Closed);
+            var result = sut.GetRequestEntries(e => e.State == RequestEntry.Is_Closed);
 
-            result.Count ().Should ().Be (4);
+            result.Count().Should().Be(4);
             foreach (var requestEntry in result)
-                sut.CloseRequest (requestEntry.RequestId);
+                sut.CloseRequest(requestEntry.RequestId);
 
-            sut.NumberOfRequests.Should ().Be (6);
+            sut.GetNumberOfRequests().Should().Be(6);
         }
 
         #endregion
@@ -297,163 +297,163 @@ namespace TitanicProtocolTests
         #region Handling of MESSAGES
 
         [Test]
-        public void GetMessage_ExistingRequest_ShouldReturnCorrectMessage ()
+        public void GetMessage_ExistingRequest_ShouldReturnCorrectMessage()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
-            var expected = new NetMQMessage ();
-            expected.Push ("Request #3");
-            expected.Push ("echo");
+            var expected = new NetMQMessage();
+            expected.Push("Request #3");
+            expected.Push("echo");
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveNewRequestEntry (ids[i], request);
+                ids[i] = Guid.NewGuid();
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveNewRequestEntry(ids[i], request);
             }
 
-            var result = sut.GetMessage (TitanicOperation.Request, ids[3]);
+            var result = sut.GetMessage(TitanicOperation.Request, ids[3]);
 
-            result.Should ().BeEquivalentTo (expected);
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Test]
-        public void GetMessage_ExistingRequestWrongState_ShouldReturnCorrectMessage ()
+        public void GetMessage_ExistingRequestWrongState_ShouldReturnCorrectMessage()
         {
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
-            var expected = new NetMQMessage ();
+            var expected = new NetMQMessage();
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveNewRequestEntry (ids[i], request);
+                ids[i] = Guid.NewGuid();
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveNewRequestEntry(ids[i], request);
             }
 
-            var result = sut.GetMessage (TitanicOperation.Reply, Guid.NewGuid ());
+            var result = sut.GetMessage(TitanicOperation.Reply, Guid.NewGuid());
 
-            result.Should ().BeEquivalentTo (expected);
+            result.Should().BeEquivalentTo(expected);
         }
 
         [Test]
-        public void SaveMessage_NewMessage_ShouldUpdateQueue ()
+        public void SaveMessage_NewMessage_ShouldUpdateQueue()
         {
-            var sut = new TitanicMemoryIO ();
-            var id = Guid.NewGuid ();
-            var request = new NetMQMessage ();
-            request.Push ("Request #1");
-            request.Push ("echo");
+            var sut = new TitanicMemoryIO();
+            var id = Guid.NewGuid();
+            var request = new NetMQMessage();
+            request.Push("Request #1");
+            request.Push("echo");
 
 
-            sut.SaveMessage (TitanicOperation.Request, id, request).Should ().BeTrue ();
-            sut.NumberOfRequests.Should ().Be (1);
+            sut.SaveMessage(TitanicOperation.Request, id, request).Should().BeTrue();
+            sut.GetNumberOfRequests().Should().Be(1);
 
-            var result = sut.GetRequestEntry (id);
+            var result = sut.GetRequestEntry(id);
 
-            result.Request.Should ().Equal (request);
-            result.State.Should ().Be (RequestEntry.Is_Pending);
+            result.Request.Should().Equal(request);
+            result.State.Should().Be(RequestEntry.Is_Pending);
         }
 
         [Test]
-        public void SaveMessage_UpdateExistingMessage_ShouldUpdateCorrectRequestEntry ()
+        public void SaveMessage_UpdateExistingMessage_ShouldUpdateCorrectRequestEntry()
         {
             const int id_to_retrieve = 7;
 
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
+                ids[i] = Guid.NewGuid();
 
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveMessage (TitanicOperation.Request, ids[i], request);
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveMessage(TitanicOperation.Request, ids[i], request);
             }
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var reply = new NetMQMessage ();
-            reply.Push ($"This is a REPLY to Request #{id_to_retrieve}");
-            reply.Push ("echo");
+            var reply = new NetMQMessage();
+            reply.Push($"This is a REPLY to Request #{id_to_retrieve}");
+            reply.Push("echo");
 
-            sut.SaveMessage (TitanicOperation.Reply, ids[id_to_retrieve], reply).Should ().BeTrue ();
+            sut.SaveMessage(TitanicOperation.Reply, ids[id_to_retrieve], reply).Should().BeTrue();
 
-            sut.NumberOfRequests.Should ().Be (10);
+            sut.GetNumberOfRequests().Should().Be(10);
 
-            var result = sut.GetRequestEntry (ids[id_to_retrieve]);
+            var result = sut.GetRequestEntry(ids[id_to_retrieve]);
 
-            result.State.Should ().Be (RequestEntry.Is_Processed);
-            result.RequestId.Should ().Be (ids[id_to_retrieve]);
-            result.Request.Should ().Equal (reply);
+            result.State.Should().Be(RequestEntry.Is_Processed);
+            result.RequestId.Should().Be(ids[id_to_retrieve]);
+            result.Request.Should().Equal(reply);
         }
 
         [Test]
-        public void ExistsMessage_ExistingMessage_ShouldUpdateCorrectRequestEntry ()
+        public void ExistsMessage_ExistingMessage_ShouldUpdateCorrectRequestEntry()
         {
             const int id_to_retrieve = 7;
 
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
+                ids[i] = Guid.NewGuid();
 
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveMessage (TitanicOperation.Request, ids[i], request);
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveMessage(TitanicOperation.Request, ids[i], request);
             }
 
-            sut.ExistsMessage (TitanicOperation.Request, ids[id_to_retrieve]).Should ().BeTrue ();
+            sut.ExistsMessage(TitanicOperation.Request, ids[id_to_retrieve]).Should().BeTrue();
         }
 
         [Test]
-        public void ExistsMessage_NotExistingMessage_ShouldUpdateCorrectRequestEntry ()
+        public void ExistsMessage_NotExistingMessage_ShouldUpdateCorrectRequestEntry()
         {
 
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
+                ids[i] = Guid.NewGuid();
 
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveMessage (TitanicOperation.Request, ids[i], request);
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveMessage(TitanicOperation.Request, ids[i], request);
             }
 
-            sut.ExistsMessage (TitanicOperation.Request, Guid.NewGuid ()).Should ().BeFalse ();
+            sut.ExistsMessage(TitanicOperation.Request, Guid.NewGuid()).Should().BeFalse();
         }
 
         [Test]
-        public void ExistsMessage_ExistingMessageWrongState_ShouldUpdateCorrectRequestEntry ()
+        public void ExistsMessage_ExistingMessageWrongState_ShouldUpdateCorrectRequestEntry()
         {
             const int id_to_retrieve = 7;
 
-            var sut = new TitanicMemoryIO ();
+            var sut = new TitanicMemoryIO();
             var ids = new Guid[10];
 
             for (var i = 0; i < 10; i++)
             {
-                ids[i] = Guid.NewGuid ();
+                ids[i] = Guid.NewGuid();
 
-                var request = new NetMQMessage ();
-                request.Push ($"Request #{i}");
-                request.Push ("echo");
-                sut.SaveMessage (TitanicOperation.Request, ids[i], request);
+                var request = new NetMQMessage();
+                request.Push($"Request #{i}");
+                request.Push("echo");
+                sut.SaveMessage(TitanicOperation.Request, ids[i], request);
             }
 
-            sut.ExistsMessage (TitanicOperation.Reply, ids[id_to_retrieve]).Should ().BeFalse ();
+            sut.ExistsMessage(TitanicOperation.Reply, ids[id_to_retrieve]).Should().BeFalse();
         }
 
         #endregion

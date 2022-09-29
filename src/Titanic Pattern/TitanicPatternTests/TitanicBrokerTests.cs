@@ -25,7 +25,7 @@ namespace TitanicProtocolTests
         private const int _sleep_for = 200;     // time in milliseconds to delay the processing
 
         [Test]
-        public void ctor_WithStandardPath_ShouldCreateRootAndQueue ()
+        public void Ctor_WithStandardPath_ShouldCreateRootAndQueue ()
         {
             using (ITitanicBroker sut = new TitanicBroker ())
             {
@@ -43,7 +43,7 @@ namespace TitanicProtocolTests
         }
 
         [Test]
-        public void ctor_WithNoneStandardPath_ShouldCreateRootAndQueueInIndicatedPath ()
+        public void Ctor_WithNoneStandardPath_ShouldCreateRootAndQueueInIndicatedPath ()
         {
             var path = Path.Combine (Path.GetTempPath (), _titanic_directory);
             // create root for Titanic - it expects the root to exist(!)
@@ -390,11 +390,10 @@ namespace TitanicProtocolTests
                 reqWorker.Reply.First.ConvertToString ().Should ().Be ("Ok");
                 var s = reqWorker.Reply.Last.ConvertToString ();
 
-                Guid id;
-                Guid.TryParse (s, out id).Should ().BeTrue ();
+                Guid.TryParse(s, out Guid id).Should().BeTrue();
 
                 // TEST QUEUE (Run was sent the Guid and it kick started the Dispatch(!)
-                io.NumberOfRequests.Should ().Be (1, "because only one request was received");
+                io.GetNumberOfRequests().Should ().Be (1, "because only one request was received");
                 var request = io.GetRequestEntry (id);
                 request.Should ().NotBe (default (RequestEntry), "because the id for the request should allow the retrieval");
                 request.RequestId.Should ().Be (id);
@@ -428,8 +427,7 @@ namespace TitanicProtocolTests
 
                 // get reply id for further processing
                 var s = reqWorker.Reply.Last.ConvertToString ();
-                Guid id;
-                Guid.TryParse (s, out id).Should ().BeTrue ();
+                Guid.TryParse(s, out Guid id).Should().BeTrue();
                 // inject to repWorker who is waiting to proceed and prepare request
                 repWorker.Request = new NetMQMessage ();
                 repWorker.Request.Push (s);
@@ -447,7 +445,7 @@ namespace TitanicProtocolTests
                 // should be identical since it is an "echo" service we are simulating :-)
                 repWorker.Reply.Should ().Equal (entry.Request);
                 // TEST QUEUE
-                io.NumberOfRequests.Should ().Be (1);
+                io.GetNumberOfRequests().Should ().Be (1);
                 io.GetRequestEntries (e => e.RequestId == id).Count ().Should ().Be (1);
                 var queueEntry = io.GetRequestEntry (id);
                 queueEntry.State.Should ().Be (RequestEntry.Is_Processed);
@@ -481,8 +479,7 @@ namespace TitanicProtocolTests
 
                 // get reply id for further processing
                 var s = reqWorker.Reply.Last.ConvertToString ();
-                Guid id;
-                Guid.TryParse (s, out id).Should ().BeTrue ();
+                Guid.TryParse(s, out Guid id).Should().BeTrue();
                 // inject to repWorker who is waiting to proceed and prepare request
                 repWorker.Request = new NetMQMessage ();
                 repWorker.Request.Push (s);
@@ -506,7 +503,7 @@ namespace TitanicProtocolTests
                 closeWorker.Reply.First.ConvertToString ().Should ().Be ("Ok", "because 'Ok' should have been send.");
 
                 // TEST QUEUE
-                io.NumberOfRequests.Should ().Be (0);
+                io.GetNumberOfRequests().Should ().Be (0);
                 io.ExistsMessage (TitanicOperation.Request, id).Should ().BeFalse ();
                 io.ExistsMessage (TitanicOperation.Reply, id).Should ().BeFalse ();
                 io.ExistsMessage (TitanicOperation.Close, id).Should ().BeFalse ();

@@ -36,12 +36,11 @@ namespace MajordomoProtocol
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null))
+            if (obj is null)
                 return false;
 
-            var other = obj as Worker;
 
-            return !ReferenceEquals(other, null) && Id == other.Id && Service.Name == other.Service.Name;
+            return obj is Worker other && Id == other.Id && Service.Name == other.Service.Name;
         }
     }
 }
