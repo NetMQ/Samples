@@ -37,7 +37,7 @@ namespace MDPWorkerExample
                 {
                     session.HeartbeatDelay = TimeSpan.FromMilliseconds (10000);
                     // logging info to be displayed on screen
-                    //if (verbose)
+                    if (verbose)
                         session.LogInfoReady += (s, e) => Console.WriteLine ("{0}", e.Info);
 
                     // there is no initial reply

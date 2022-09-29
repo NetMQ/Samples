@@ -1,22 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <AssemblyTitle>Freelance.ModelOne.Client</AssemblyTitle>
-    <Company>HP</Company>
-    <Product>Freelance.ModelOne.Client</Product>
-    <Copyright>Copyright © HP 2013</Copyright>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Backup1\**" />
-    <Compile Remove="Backup\**" />
-    <EmbeddedResource Remove="Backup1\**" />
-    <EmbeddedResource Remove="Backup\**" />
-    <None Remove="Backup1\**" />
-    <None Remove="Backup\**" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AsyncIO" Version="0.1.69" />
-    <PackageReference Include="NetMQ" Version="4.0.1.8" />
+    <PackageReference Include="NetMQ" Version="4.0.1.10" />
   </ItemGroup>
 </Project>

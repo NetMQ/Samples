@@ -1,14 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <AssemblyTitle>LazyPirate.Client2</AssemblyTitle>
-    <Product>LazyPirate.Client2</Product>
-    <Copyright>Copyright ©  2016</Copyright>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AsyncIO" Version="0.1.69" />
-    <PackageReference Include="NetMQ" Version="4.0.1.8" />
+    <PackageReference Include="NetMQ" Version="4.0.1.10" />
   </ItemGroup>
 </Project>

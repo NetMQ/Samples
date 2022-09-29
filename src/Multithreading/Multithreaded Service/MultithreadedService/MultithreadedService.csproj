@@ -1,22 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <AssemblyTitle>MultithreadedService</AssemblyTitle>
-    <Company>Greiner SpA</Company>
-    <Product>MultithreadedService</Product>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Backup1\**" />
-    <Compile Remove="Backup\**" />
-    <EmbeddedResource Remove="Backup1\**" />
-    <EmbeddedResource Remove="Backup\**" />
-    <None Remove="Backup1\**" />
-    <None Remove="Backup\**" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AsyncIO" Version="0.1.69" />
-    <PackageReference Include="NetMQ" Version="4.0.1.8" />
+    <PackageReference Include="NetMQ" Version="4.0.1.10" />
     <PackageReference Include="NetMQ.Devices" Version="1.0.0" />
   </ItemGroup>
 </Project>

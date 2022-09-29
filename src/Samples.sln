@@ -7,11 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WeatherUpdate", "WeatherUpd
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld", "HelloWorld", "{5A526E6B-083E-419A-A2BD-A0C807E6FA0E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "HelloWorld\HelloWorld.csproj", "{7AB16EE9-4A79-4BFB-8C0B-D1A076E34896}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "HelloWorld\HelloWorld.csproj", "{7AB16EE9-4A79-4BFB-8C0B-D1A076E34896}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeatherUpdateClient", "WeatherUpdater\WeatherUpdateClient\WeatherUpdateClient.csproj", "{37B320C0-9E44-44EF-B89A-E671DBA4986B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherUpdateClient", "WeatherUpdater\WeatherUpdateClient\WeatherUpdateClient.csproj", "{37B320C0-9E44-44EF-B89A-E671DBA4986B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeatherUpdateServer", "WeatherUpdater\WeatherUpdateServer\WeatherUpdateServer.csproj", "{5B8F7740-EFD5-46B9-8A96-2E1F47385295}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherUpdateServer", "WeatherUpdater\WeatherUpdateServer\WeatherUpdateServer.csproj", "{5B8F7740-EFD5-46B9-8A96-2E1F47385295}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Brokerless Reliability (Freelance Pattern)", "Brokerless Reliability (Freelance Pattern)", "{CCC09B86-B0E6-47B4-B05A-8F10F2135F6C}"
 EndProject

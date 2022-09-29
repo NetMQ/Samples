@@ -63,7 +63,7 @@ namespace MDPClientExample
                 // create MDP client and set verboseness && use automatic disposal
                 using (var session = new MDPClient("tcp://localhost:5555", id))
                 {
-                    //if (verbose)
+                    if (verbose)
                         session.LogInfoReady += (s, e) => Console.WriteLine("{0}", e.Info);
 
                     // just give everything time to settle in
