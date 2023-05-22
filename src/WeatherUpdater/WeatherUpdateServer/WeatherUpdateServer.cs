@@ -7,18 +7,17 @@ Console.CancelKeyPress += (sender, e) => stopRequested = true;
 
 Console.WriteLine("Publishing weather updates...");
 
-using (var publisher = new PublisherSocket())
+using var publisher = new PublisherSocket();
+
+publisher.Bind("tcp://127.0.0.1:5556");
+
+var rng = new Random();
+
+while (!stopRequested)
 {
-    publisher.Bind("tcp://127.0.0.1:5556");
+    int zipcode = rng.Next(0, 99999);
+    int temperature = rng.Next(-80, 135);
+    int relhumidity = rng.Next(0, 90);
 
-    var rng = new Random();
-
-    while (!stopRequested)
-    {
-        int zipcode = rng.Next(0, 99999);
-        int temperature = rng.Next(-80, 135);
-        int relhumidity = rng.Next(0, 90);
-
-        publisher.SendFrame($"{zipcode} {temperature} {relhumidity}");
-    }
+    publisher.SendFrame($"{zipcode} {temperature} {relhumidity}");
 }

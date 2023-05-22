@@ -1,17 +1,16 @@
 ﻿Console.Title = "NetMQ HelloWorld";
 
-using (var server = new ResponseSocket("@tcp://localhost:5556"))
-using (var client = new RequestSocket("tcp://localhost:5556"))
-{
-    client.SendFrame("Hello");
+var server = new ResponseSocket("@tcp://localhost:5556");
+var client = new RequestSocket("tcp://localhost:5556");
 
-    Console.WriteLine("From Client: {0}", server.ReceiveFrameString());
+client.SendFrame("Hello");
 
-    server.SendFrame("Hi Back");
+Console.WriteLine("From Client: {0}", server.ReceiveFrameString());
 
-    Console.WriteLine("From Server: {0}", client.ReceiveFrameString());
+server.SendFrame("Hi Back");
 
-    Console.WriteLine();
-    Console.Write("Press any key to exit...");
-    Console.ReadKey();
-}
+Console.WriteLine("From Server: {0}", client.ReceiveFrameString());
+
+Console.WriteLine();
+Console.Write("Press any key to exit...");
+Console.ReadKey();

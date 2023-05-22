@@ -1,27 +1,29 @@
 ﻿using NetMQ.Devices;
 
-CancellationToken s_token;
+CancellationToken token;
 
 Console.Title = "NetMQ Multi-threaded Service";
 
 var queue = new QueueDevice("tcp://localhost:5555", "tcp://localhost:5556", DeviceMode.Threaded);
 
 var source = new CancellationTokenSource();
-s_token = source.Token;
+token = source.Token;
 
 for (int threadId = 0; threadId < 10; threadId++)
-    _ = Task.Factory.StartNew(WorkerRoutine, s_token);
+{
+    _ = Task.Factory.StartNew(WorkerRoutine, token);
+}
 
 queue.Start();
 
-var clientThreads = new List<Task>();
-for (int threadId = 0; threadId < 1000; threadId++)
+var tasks = new List<Task>();
+for (int i = 0; i < 1000; i++)
 {
-    int id = threadId;
-    clientThreads.Add(Task.Factory.StartNew(() => ClientRoutine(id)));
+    int clientId = i;
+    tasks.Add(Task.Factory.StartNew(() => ClientRoutine(clientId)));
 }
 
-Task.WaitAll(clientThreads.ToArray());
+await Task.WhenAll(tasks.ToArray());
 
 source.Cancel();
 
@@ -34,18 +36,16 @@ void ClientRoutine(object clientId)
 {
     try
     {
-        using (var req = new RequestSocket())
-        {
-            req.Connect("tcp://localhost:5555");
+        using var req = new RequestSocket();
+        req.Connect("tcp://localhost:5555");
 
-            byte[] message = Encoding.Unicode.GetBytes($"{clientId} Hello");
+        byte[] message = Encoding.Unicode.GetBytes($"{clientId} Hello");
 
-            Console.WriteLine("Client {0} sent \"{0} Hello\"", clientId);
-            req.SendFrame(message, message.Length);
+        Console.WriteLine("Client {0} sent \"{0} Hello\"", clientId);
+        req.SendFrame(message, message.Length);
 
-            var response = req.ReceiveFrameString(Encoding.Unicode);
-            Console.WriteLine("Client {0} received \"{1}\"", clientId, response);
-        }
+        var response = req.ReceiveFrameString(Encoding.Unicode);
+        Console.WriteLine("Client {0} received \"{1}\"", clientId, response);
     }
     catch (Exception ex)
     {
@@ -57,16 +57,14 @@ void WorkerRoutine()
 {
     try
     {
-        using (ResponseSocket rep = new ResponseSocket())
+        using ResponseSocket rep = new ResponseSocket();
+        rep.Options.Identity = Encoding.Unicode.GetBytes(Guid.NewGuid().ToString());
+        rep.Connect("tcp://localhost:5556");
+        //rep.Connect("inproc://workers");
+        rep.ReceiveReady += RepOnReceiveReady;
+        while (!token.IsCancellationRequested)
         {
-            rep.Options.Identity = Encoding.Unicode.GetBytes(Guid.NewGuid().ToString());
-            rep.Connect("tcp://localhost:5556");
-            //rep.Connect("inproc://workers");
-            rep.ReceiveReady += RepOnReceiveReady;
-            while (!s_token.IsCancellationRequested)
-            {
-                rep.Poll(TimeSpan.FromMilliseconds(100));
-            }
+            rep.Poll(TimeSpan.FromMilliseconds(100));
         }
     }
     catch (Exception ex)

@@ -34,107 +34,105 @@ public class Client
         // a flag to signal that an answer has arrived
         bool messageAnswered = false;
         // we use a poller because we have a socket and a timer to monitor
-        using (var clientPoller = new NetMQPoller())
-        using (var client = new RequestSocket())
-        using (var monitor = new PushSocket())
+        using var clientPoller = new NetMQPoller();
+        using var client = new RequestSocket();
+        using var monitor = new PushSocket();
+        client.Connect(m_localFrontendAddress);
+        monitor.Connect(m_monitorAddress);
+
+        client.Options.Identity = new[] { m_id };
+        var timer = new NetMQTimer((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
+
+        // use as flag to indicate exit
+        var exit = false;
+
+        // every 10 s check if message has been received, if not then send error message and ext
+        // and restart timer otherwise
+        timer.Elapsed += (s, e) =>
         {
-            client.Connect(m_localFrontendAddress);
-            monitor.Connect(m_monitorAddress);
-
-            client.Options.Identity = new[] { m_id };
-            var timer = new NetMQTimer((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
-
-            // use as flag to indicate exit
-            var exit = false;
-
-            // every 10 s check if message has been received, if not then send error message and ext
-            // and restart timer otherwise
-            timer.Elapsed += (s, e) =>
+            if (messageAnswered)
             {
-                if (messageAnswered)
-                {
-                    e.Timer.Enable = true;
-                }
-                else
-                {
-                    var msg = $"[CLIENT {m_id}] ERR - EXIT - lost message {messageId}";
-                    // send an error message
-                    monitor.SendFrame(msg);
-
-                    // if poller is started than stop it
-                    if (clientPoller.IsRunning)
-                        clientPoller.Stop();
-                    // mark the required exit
-                    exit = true;
-                }
-            };
-
-            // process arriving answers
-            client.ReceiveReady += (s, e) =>
-            {
-                // mark the arrival of an answer
-                messageAnswered = true;
-                // worker is supposed to answer with our request id
-                var reply = e.Socket.ReceiveMultipartMessage();
-
-                if (reply.FrameCount == 0)
-                {
-                    // something went wrong
-                    monitor.SendFrame($"[CLIENT {m_id}] Received an empty message!");
-                    // mark the exit flag to ensure the exit
-                    exit = true;
-                }
-                else
-                {
-                    var sb = new StringBuilder();
-
-                    // create success message
-                    foreach (var frame in reply)
-                        sb.Append("[" + frame.ConvertToString() + "]");
-
-                    // send the success message
-                    monitor.SendFrame($"[CLIENT {m_id}] Received answer {sb.ToString()}");
-                }
-            };
-
-            // add socket & timer to poller
-            clientPoller.Add(client);
-            clientPoller.Add(timer);
-
-            // start poller in another thread to allow the continued processing
-            clientPoller.RunAsync();
-
-            // if true the message has been answered
-            // the 0th message is always answered
-            messageAnswered = true;
-
-            while (!exit)
-            {
-                // simulate sporadic activity by randomly delaying
-                Thread.Sleep((int)TimeSpan.FromSeconds(rnd.Next(5)).TotalMilliseconds);
-
-                // only send next message if the previous one has been replied to
-                if (messageAnswered)
-                {
-                    // generate random 5 byte as identity for for the message
-                    rnd.NextBytes(messageId);
-
-                    messageAnswered = false;
-
-                    // create message [client adr][empty][message id] and send it
-                    var msg = new NetMQMessage();
-
-                    msg.Push(messageId);
-                    msg.Push(NetMQFrame.Empty);
-                    msg.Push(clientId);
-
-                    client.SendMultipartMessage(msg);
-                }
+                e.Timer.Enable = true;
             }
+            else
+            {
+                var msg = $"[CLIENT {m_id}] ERR - EXIT - lost message {messageId}";
+                // send an error message
+                monitor.SendFrame(msg);
 
-            // stop poller if needed
-            if (clientPoller.IsRunning)
-                clientPoller.Stop();
+                // if poller is started than stop it
+                if (clientPoller.IsRunning)
+                    clientPoller.Stop();
+                // mark the required exit
+                exit = true;
+            }
+        };
+
+        // process arriving answers
+        client.ReceiveReady += (s, e) =>
+        {
+            // mark the arrival of an answer
+            messageAnswered = true;
+            // worker is supposed to answer with our request id
+            var reply = e.Socket.ReceiveMultipartMessage();
+
+            if (reply.FrameCount == 0)
+            {
+                // something went wrong
+                monitor.SendFrame($"[CLIENT {m_id}] Received an empty message!");
+                // mark the exit flag to ensure the exit
+                exit = true;
+            }
+            else
+            {
+                var sb = new StringBuilder();
+
+                // create success message
+                foreach (var frame in reply)
+                    sb.Append("[" + frame.ConvertToString() + "]");
+
+                // send the success message
+                monitor.SendFrame($"[CLIENT {m_id}] Received answer {sb.ToString()}");
+            }
+        };
+
+        // add socket & timer to poller
+        clientPoller.Add(client);
+        clientPoller.Add(timer);
+
+        // start poller in another thread to allow the continued processing
+        clientPoller.RunAsync();
+
+        // if true the message has been answered
+        // the 0th message is always answered
+        messageAnswered = true;
+
+        while (!exit)
+        {
+            // simulate sporadic activity by randomly delaying
+            Thread.Sleep((int)TimeSpan.FromSeconds(rnd.Next(5)).TotalMilliseconds);
+
+            // only send next message if the previous one has been replied to
+            if (messageAnswered)
+            {
+                // generate random 5 byte as identity for for the message
+                rnd.NextBytes(messageId);
+
+                messageAnswered = false;
+
+                // create message [client adr][empty][message id] and send it
+                var msg = new NetMQMessage();
+
+                msg.Push(messageId);
+                msg.Push(NetMQFrame.Empty);
+                msg.Push(clientId);
+
+                client.SendMultipartMessage(msg);
+            }
         }
+
+        // stop poller if needed
+        if (clientPoller.IsRunning)
+            clientPoller.Stop();
     }
 }

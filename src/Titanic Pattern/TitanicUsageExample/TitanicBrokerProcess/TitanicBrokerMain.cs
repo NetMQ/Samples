@@ -26,23 +26,21 @@ internal class TitanicBrokerMain
 
         Console.WriteLine("Starting Titanic Broker in {0} - mode.\n\n", verbose ? "verbose" : "silent");
 
-        using (var titanic = new TitanicBroker(new TitanicMemoryIO()))
-        {
-            if (verbose)
-                titanic.LogInfoReady += (s, e) => PrintMessage(e.Info);
+        using var titanic = new TitanicBroker(new TitanicMemoryIO());
+        if (verbose)
+            titanic.LogInfoReady += (s, e) => PrintMessage(e.Info);
 
-            try
-            {
-                Task.Factory.StartNew(() => titanic.Run(), cts.Token).Wait(cts.Token);
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine(e.Flatten());
-            }
-            finally
-            {
-                cts.Dispose();
-            }
+        try
+        {
+            Task.Factory.StartNew(() => titanic.Run(), cts.Token).Wait(cts.Token);
+        }
+        catch (AggregateException e)
+        {
+            Console.WriteLine(e.Flatten());
+        }
+        finally
+        {
+            cts.Dispose();
         }
     }
 

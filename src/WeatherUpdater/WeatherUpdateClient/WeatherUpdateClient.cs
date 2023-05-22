@@ -8,28 +8,27 @@ int totalHumidity = 0;
 
 Console.WriteLine("Collecting updates for weather service for zipcode {0}...", zipToSubscribeTo);
 
-using (var subscriber = new SubscriberSocket())
+using var subscriber = new SubscriberSocket();
+
+subscriber.Connect("tcp://127.0.0.1:5556");
+subscriber.Subscribe(zipToSubscribeTo.ToString(CultureInfo.InvariantCulture));
+
+for (int i = 0; i < iterations; i++)
 {
-    subscriber.Connect("tcp://127.0.0.1:5556");
-    subscriber.Subscribe(zipToSubscribeTo.ToString(CultureInfo.InvariantCulture));
+    string results = subscriber.ReceiveFrameString();
+    Console.Write(".");
 
-    for (int i = 0; i < iterations; i++)
+    // "zip temp relh" ... "10001 84 23" -> ["10001", "84", "23"]
+    string[] split = results.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+    int zip = int.Parse(split[0]);
+    if (zip != zipToSubscribeTo)
     {
-        string results = subscriber.ReceiveFrameString();
-        Console.Write(".");
-
-        // "zip temp relh" ... "10001 84 23" -> ["10001", "84", "23"]
-        string[] split = results.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-        int zip = int.Parse(split[0]);
-        if (zip != zipToSubscribeTo)
-        {
-            throw new Exception($"Received message for unexpected zipcode: {zip} (expected {zipToSubscribeTo})");
-        }
-
-        totalTemp += int.Parse(split[1]);
-        totalHumidity += int.Parse(split[2]);
+        throw new Exception($"Received message for unexpected zipcode: {zip} (expected {zipToSubscribeTo})");
     }
+
+    totalTemp += int.Parse(split[1]);
+    totalHumidity += int.Parse(split[2]);
 }
 
 Console.WriteLine();

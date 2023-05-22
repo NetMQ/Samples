@@ -2,41 +2,40 @@
 
 const uint PortNumber = 5555;
 
-using (var response = new ResponseSocket())
+using var response = new ResponseSocket();
+
+string address = GetComputerLanIP();
+
+if (!string.IsNullOrEmpty(address))
 {
-    string address = GetComputerLanIP();
+    Console.WriteLine("Binding tcp://{0}:{1}", address, PortNumber);
+    response.Bind($"tcp://{address}:{PortNumber}");
 
-    if (!string.IsNullOrEmpty(address))
+    while (true)
     {
-        Console.WriteLine("Binding tcp://{0}:{1}", address, PortNumber);
-        response.Bind($"tcp://{address}:{PortNumber}");
-
-        while (true)
+        bool hasMore;
+        string msg = response.ReceiveFrameString(out hasMore);
+        if (string.IsNullOrEmpty(msg))
         {
-            bool hasMore;
-            string msg = response.ReceiveFrameString(out hasMore);
-            if (string.IsNullOrEmpty(msg))
-            {
-                Console.WriteLine("No msg received.");
-                break;
-            }
-
-            Console.WriteLine("Msg received! {0}", msg);
-            response.SendFrame(msg, hasMore);
-
-            Thread.Sleep(1000);
+            Console.WriteLine("No msg received.");
+            break;
         }
 
-        response.Options.Linger = TimeSpan.Zero;
-    }
-    else
-    {
-        Console.WriteLine("Wrong IP address");
+        Console.WriteLine("Msg received! {0}", msg);
+        response.SendFrame(msg, hasMore);
+
+        Thread.Sleep(1000);
     }
 
-    Console.WriteLine("Press any key to exit...");
-    Console.ReadKey();
+    response.Options.Linger = TimeSpan.Zero;
 }
+else
+{
+    Console.WriteLine("Wrong IP address");
+}
+
+Console.WriteLine("Press any key to exit...");
+Console.ReadKey();
 
 static string GetComputerLanIP()
 {

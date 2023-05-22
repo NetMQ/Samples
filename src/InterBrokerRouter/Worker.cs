@@ -23,44 +23,42 @@ public class Worker
     {
         var rnd = new Random(m_id);
 
-        using (var worker = new RequestSocket())
+        using var worker = new RequestSocket();
+        worker.Connect(m_localBackendAddress);
+
+        Console.WriteLine("[WORKER {0}] Connected & READY", m_id);
+
+        // build READY message
+        var msg = new NetMQMessage();
+        var ready = NetMQFrame.Copy(new[] { Program.WorkerReady });
+
+        msg.Append(ready);
+        msg.Push(NetMQFrame.Empty);
+        msg.Push(new[] { m_id });
+
+        // and send to broker
+        worker.SendMultipartMessage(msg);
+
+        while (true)
         {
-            worker.Connect(m_localBackendAddress);
+            // wait for a request - the REQ might be from a local client or a cloud request
+            var request = worker.ReceiveMultipartMessage();
 
-            Console.WriteLine("[WORKER {0}] Connected & READY", m_id);
-
-            // build READY message
-            var msg = new NetMQMessage();
-            var ready = NetMQFrame.Copy(new[] { Program.WorkerReady });
-
-            msg.Append(ready);
-            msg.Push(NetMQFrame.Empty);
-            msg.Push(new[] { m_id });
-
-            // and send to broker
-            worker.SendMultipartMessage(msg);
-
-            while (true)
+            if (request.FrameCount < 3)
             {
-                // wait for a request - the REQ might be from a local client or a cloud request
-                var request = worker.ReceiveMultipartMessage();
-
-                if (request.FrameCount < 3)
-                {
-                    Console.WriteLine("[WORKER {0}] ERR - received an empty message", m_id);
-                    break; // something went wrong -> exit
-                }
-
-                Console.WriteLine("[WORKER {0}] received", m_id);
-
-                foreach (var frame in request)
-                    Console.WriteLine("\t[{0}", frame.ConvertToString());
-
-                // simulate working for an arbitrary time < 2s
-                Thread.Sleep(rnd.Next(2000));
-                // simply send back what we received
-                worker.SendMultipartMessage(request);
+                Console.WriteLine("[WORKER {0}] ERR - received an empty message", m_id);
+                break; // something went wrong -> exit
             }
+
+            Console.WriteLine("[WORKER {0}] received", m_id);
+
+            foreach (var frame in request)
+                Console.WriteLine("\t[{0}", frame.ConvertToString());
+
+            // simulate working for an arbitrary time < 2s
+            Thread.Sleep(rnd.Next(2000));
+            // simply send back what we received
+            worker.SendMultipartMessage(request);
         }
     }
 }

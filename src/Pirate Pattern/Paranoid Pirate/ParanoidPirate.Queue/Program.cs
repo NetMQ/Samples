@@ -23,119 +23,117 @@ public static class Program
 
         var verbose = args.Length > 0 && args[0] == "-v";
 
-        using (var frontend = new RouterSocket())
-        using (var backend = new RouterSocket())
-        using (var poller = new NetMQPoller())
+        using var frontend = new RouterSocket();
+        using var backend = new RouterSocket();
+        using var poller = new NetMQPoller();
+        frontend.Bind(Commons.QueueFrontend);
+        backend.Bind(Commons.QueueBackend);
+
+        var workers = new Workers();
+
+        // client sends to this socket
+        frontend.ReceiveReady += (s, e) =>
         {
-            frontend.Bind(Commons.QueueFrontend);
-            backend.Bind(Commons.QueueBackend);
-
-            var workers = new Workers();
-
-            // client sends to this socket
-            frontend.ReceiveReady += (s, e) =>
+            // only process incoming client requests
+            // if we have workers available handle client requests as long as we have workers
+            // storage capability of the socket otherwise and pick up later
+            if (workers.Available)
             {
-                // only process incoming client requests
-                // if we have workers available handle client requests as long as we have workers
-                // storage capability of the socket otherwise and pick up later
-                if (workers.Available)
-                {
-                    // get all message frames!
-                    var request = frontend.ReceiveMultipartMessage();
-
-                    if (verbose)
-                        Console.WriteLine("[QUEUE] received {0}", request);
-
-                    // get next available worker
-                    var worker = workers.Next();
-                    // wrap message with worker's address
-                    var msg = Wrap(worker, request);
-
-                    if (verbose)
-                        Console.WriteLine("[QUEUE -> WORKER] sending {0}", msg);
-
-                    backend.SendMultipartMessage(msg);
-                }
-            };
-
-            // worker sends to this socket
-            backend.ReceiveReady += (s, e) =>
-            {
-                var msg = e.Socket.ReceiveMultipartMessage();
+                // get all message frames!
+                var request = frontend.ReceiveMultipartMessage();
 
                 if (verbose)
-                    Console.WriteLine("[QUEUE <- WORKER] received {0}", msg);
+                    Console.WriteLine("[QUEUE] received {0}", request);
 
-                // use workers identity for load-balancing
-                var workerIdentity = Unwrap(msg);
-                var worker = new Worker(workerIdentity);
-                workers.Ready(worker);
-                // just convenience
-                var readableWorkerId = workerIdentity.ConvertToString();
+                // get next available worker
+                var worker = workers.Next();
+                // wrap message with worker's address
+                var msg = Wrap(worker, request);
 
-                if (msg.FrameCount == 1)
-                {
-                    var data = msg[0].ConvertToString();
-                    // the message is either READY or HEARTBEAT or corrupted
-                    switch (data)
-                    {
-                        case Commons.PPPHeartbeat:
-                            Console.WriteLine("[QUEUE <- WORKER] Received a Heartbeat from {0}",
-                                readableWorkerId);
-                            break;
-                        case Commons.PPPReady:
-                            Console.WriteLine("[QUEUE <- WORKER] Received a READY form {0}",
-                                readableWorkerId);
-                            break;
-                        default:
-                            Console.WriteLine("[QUEUE <- WORKER] ERROR received an invalid message!");
-                            break;
-                    }
-                }
-                else
-                {
-                    if (verbose)
-                        Console.WriteLine("[QUEUE -> CLIENT] sending {0}", msg);
+                if (verbose)
+                    Console.WriteLine("[QUEUE -> WORKER] sending {0}", msg);
 
-                    frontend.SendMultipartMessage(msg);
-                }
-            };
+                backend.SendMultipartMessage(msg);
+            }
+        };
 
-            var timer = new NetMQTimer(Commons.HeartbeatInterval);
-            // every specified ms QUEUE shall send a heartbeat to all connected workers
-            timer.Elapsed += (s, e) =>
-            {
-                // send heartbeat to every worker
-                foreach (var worker in workers)
-                {
-                    var heartbeat = new NetMQMessage();
-
-                    heartbeat.Push(new NetMQFrame(Commons.PPPHeartbeat));
-                    heartbeat.Push(worker.Identity);
-
-                    Console.WriteLine("[QUEUE -> WORKER] sending heartbeat!");
-
-                    backend.SendMultipartMessage(heartbeat);
-                }
-                // restart timer
-                e.Timer.Enable = true;
-                // remove all dead or expired workers
-                workers.Purge();
-            };
+        // worker sends to this socket
+        backend.ReceiveReady += (s, e) =>
+        {
+            var msg = e.Socket.ReceiveMultipartMessage();
 
             if (verbose)
-                Console.WriteLine("[QUEUE] Start listening!");
+                Console.WriteLine("[QUEUE <- WORKER] received {0}", msg);
 
-            poller.Add(frontend);
-            poller.Add(backend);
-            poller.Add(timer);
+            // use workers identity for load-balancing
+            var workerIdentity = Unwrap(msg);
+            var worker = new Worker(workerIdentity);
+            workers.Ready(worker);
+            // just convenience
+            var readableWorkerId = workerIdentity.ConvertToString();
 
-            poller.RunAsync();
+            if (msg.FrameCount == 1)
+            {
+                var data = msg[0].ConvertToString();
+                // the message is either READY or HEARTBEAT or corrupted
+                switch (data)
+                {
+                    case Commons.PPPHeartbeat:
+                        Console.WriteLine("[QUEUE <- WORKER] Received a Heartbeat from {0}",
+                            readableWorkerId);
+                        break;
+                    case Commons.PPPReady:
+                        Console.WriteLine("[QUEUE <- WORKER] Received a READY form {0}",
+                            readableWorkerId);
+                        break;
+                    default:
+                        Console.WriteLine("[QUEUE <- WORKER] ERROR received an invalid message!");
+                        break;
+                }
+            }
+            else
+            {
+                if (verbose)
+                    Console.WriteLine("[QUEUE -> CLIENT] sending {0}", msg);
 
-            // hit CRTL+C to stop the while loop
-            while (!exit)
-                Thread.Sleep(100);
-        }
+                frontend.SendMultipartMessage(msg);
+            }
+        };
+
+        var timer = new NetMQTimer(Commons.HeartbeatInterval);
+        // every specified ms QUEUE shall send a heartbeat to all connected workers
+        timer.Elapsed += (s, e) =>
+        {
+            // send heartbeat to every worker
+            foreach (var worker in workers)
+            {
+                var heartbeat = new NetMQMessage();
+
+                heartbeat.Push(new NetMQFrame(Commons.PPPHeartbeat));
+                heartbeat.Push(worker.Identity);
+
+                Console.WriteLine("[QUEUE -> WORKER] sending heartbeat!");
+
+                backend.SendMultipartMessage(heartbeat);
+            }
+            // restart timer
+            e.Timer.Enable = true;
+            // remove all dead or expired workers
+            workers.Purge();
+        };
+
+        if (verbose)
+            Console.WriteLine("[QUEUE] Start listening!");
+
+        poller.Add(frontend);
+        poller.Add(backend);
+        poller.Add(timer);
+
+        poller.RunAsync();
+
+        // hit CRTL+C to stop the while loop
+        while (!exit)
+            Thread.Sleep(100);
     }
 
     /// <summary>

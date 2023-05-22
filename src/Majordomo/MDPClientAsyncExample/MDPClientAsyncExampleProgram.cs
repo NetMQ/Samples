@@ -59,38 +59,36 @@ internal static class MDPClientAsyncExampleProgram
         try
         {
             // create MDP client and set verboseness && use automatic disposal
-            using (var session = new MDPClientAsync("tcp://localhost:5555", id))
+            using var session = new MDPClientAsync("tcp://localhost:5555", id);
+
+            if (verbose)
+                session.LogInfoReady += (s, e) => Console.WriteLine("{0}", e.Info);
+
+            session.ReplyReady += (s, e) => Console.WriteLine("{0}", e.Reply);
+
+            // just give everything time to settle in
+            Thread.Sleep(500);
+
+            watch.Start();
+
+            for (int count = 0; count < runs; count++)
             {
+                var request = new NetMQMessage();
+                // set the request data
+                request.Push("Hello World!");
+                // send the request to the service
+                session.Send(service_name, request);
 
-                if (verbose)
-                    session.LogInfoReady += (s, e) => Console.WriteLine("{0}", e.Info);
-
-                session.ReplyReady += (s, e) => Console.WriteLine("{0}", e.Reply);
-
-                // just give everything time to settle in
-                Thread.Sleep(500);
-
-                watch.Start();
-
-                for (int count = 0; count < runs; count++)
-                {
-                    var request = new NetMQMessage();
-                    // set the request data
-                    request.Push("Hello World!");
-                    // send the request to the service
-                    session.Send(service_name, request);
-
-                    if (count % 1000 == 0)
-                        Console.Write("|");
-                    else
-                        if (count % 100 == 0)
-                        Console.Write(".");
-                }
-
-                watch.Stop();
-                Console.Write("\nStop receiving with any key!");
-                Console.ReadKey();
+                if (count % 1000 == 0)
+                    Console.Write("|");
+                else
+                    if (count % 100 == 0)
+                    Console.Write(".");
             }
+
+            watch.Stop();
+            Console.Write("\nStop receiving with any key!");
+            Console.ReadKey();
         }
         catch (Exception ex)
         {

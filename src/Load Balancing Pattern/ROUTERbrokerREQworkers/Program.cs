@@ -3,53 +3,52 @@ const int PortNumber = 5555;
 
 var workers = new List<Thread>(WorkersCount);
 
-using (var client = new RouterSocket())
+using var client = new RouterSocket();
+
+string cnn = $"tcp://localhost:{PortNumber}";
+client.Bind(cnn);
+Console.WriteLine("[B] Connect to {0}", cnn);
+
+for (int workerNumber = 0; workerNumber < WorkersCount; workerNumber++)
 {
-    string cnn = $"tcp://localhost:{PortNumber}";
-    client.Bind(cnn);
-    Console.WriteLine("[B] Connect to {0}", cnn);
+    workers.Add(new Thread(WorkerTask));
+    workers[workerNumber].Start(PortNumber);
+}
 
-    for (int workerNumber = 0; workerNumber < WorkersCount; workerNumber++)
-    {
-        workers.Add(new Thread(WorkerTask));
-        workers[workerNumber].Start(PortNumber);
-    }
+for (int taskNumber = 0; taskNumber < WorkersCount*10; taskNumber++)
+{
+    // LRU worker is next waiting in queue
+    string address = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", address);
+    string empty = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", empty);
+    string ready = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", ready);
 
-    for (int taskNumber = 0; taskNumber < WorkersCount*10; taskNumber++)
-    {
-        // LRU worker is next waiting in queue
-        string address = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", address);
-        string empty = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", empty);
-        string ready = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", ready);
+    client.SendMoreFrame(address);
+    //Console.WriteLine("[B] Message sent: {0}", address);
+    client.SendMoreFrame("");
+    //Console.WriteLine("[B] Message sent: {0}", "");
+    client.SendFrame("This is the workload");
+    //Console.WriteLine("[B] Message sent: {0}", "This is the workload");
+}
 
-        client.SendMoreFrame(address);
-        //Console.WriteLine("[B] Message sent: {0}", address);
-        client.SendMoreFrame("");
-        //Console.WriteLine("[B] Message sent: {0}", "");
-        client.SendFrame("This is the workload");
-        //Console.WriteLine("[B] Message sent: {0}", "This is the workload");
-    }
+// Now ask mamas to shut down and report their results
+for (int taskNbr = 0; taskNbr < WorkersCount; taskNbr++)
+{
+    string address = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", address);
+    string empty = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", empty);
+    string ready = client.ReceiveFrameString();
+    //Console.WriteLine("[B] Message received: {0}", ready);
 
-    // Now ask mamas to shut down and report their results
-    for (int taskNbr = 0; taskNbr < WorkersCount; taskNbr++)
-    {
-        string address = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", address);
-        string empty = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", empty);
-        string ready = client.ReceiveFrameString();
-        //Console.WriteLine("[B] Message received: {0}", ready);
-
-        client.SendMoreFrame(address);
-        //Console.WriteLine("[B] Message sent: {0}", address);
-        client.SendMoreFrame("");
-        //Console.WriteLine("[B] Message sent: {0}", "");
-        client.SendFrame("END");
-        //Console.WriteLine("[B] Message sent: {0}", "END");
-    }
+    client.SendMoreFrame(address);
+    //Console.WriteLine("[B] Message sent: {0}", address);
+    client.SendMoreFrame("");
+    //Console.WriteLine("[B] Message sent: {0}", "");
+    client.SendFrame("END");
+    //Console.WriteLine("[B] Message sent: {0}", "END");
 }
 
 Console.ReadLine();
@@ -60,41 +59,39 @@ static void WorkerTask(object portNumber)
 {
     var random = new Random(DateTime.Now.Millisecond);
 
-    using (var worker = new RequestSocket())
+    using var worker = new RequestSocket();
+    // We use a string identity for ease here
+    string id = ZHelpers.SetID(worker, Encoding.Unicode);
+    string cnn = $"tcp://localhost:{portNumber}";
+    worker.Connect(cnn);
+    Console.WriteLine("[W] ID {0} connect to {1}", id, cnn);
+
+    int total = 0;
+
+    bool end = false;
+    while (!end)
     {
-        // We use a string identity for ease here
-        string id = ZHelpers.SetID(worker, Encoding.Unicode);
-        string cnn = $"tcp://localhost:{portNumber}";
-        worker.Connect(cnn);
-        Console.WriteLine("[W] ID {0} connect to {1}", id, cnn);
+        // Tell the router we're ready for work
+        worker.SendFrame("Ready");
+        //Console.WriteLine("[W] Message sent: {0}", msg);
 
-        int total = 0;
+        // Get workload from router, until finished
+        string workload = worker.ReceiveFrameString();
+        //Console.WriteLine("[W] Workload received: {0}", workload);
 
-        bool end = false;
-        while (!end)
+        if (workload == "END")
         {
-            // Tell the router we're ready for work
-            worker.SendFrame("Ready");
-            //Console.WriteLine("[W] Message sent: {0}", msg);
-
-            // Get workload from router, until finished
-            string workload = worker.ReceiveFrameString();
-            //Console.WriteLine("[W] Workload received: {0}", workload);
-
-            if (workload == "END")
-            {
-                end = true;
-            }
-            else
-            {
-                total++;
-
-                Thread.Sleep(random.Next(1, 1000)); //  Simulate 'work'
-            }
+            end = true;
         }
+        else
+        {
+            total++;
 
-        Console.WriteLine("ID ({0}) processed: {1} tasks", Encoding.Unicode.GetString(worker.Options.Identity), total);
+            Thread.Sleep(random.Next(1, 1000)); //  Simulate 'work'
+        }
     }
+
+    Console.WriteLine("ID ({0}) processed: {1} tasks", Encoding.Unicode.GetString(worker.Options.Identity), total);
 }
 
 public static class ZHelpers

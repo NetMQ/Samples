@@ -104,280 +104,277 @@ internal static class Program
         var monitorAddress = baseAddress + (myPort + 4);
 
         // create the context and all the sockets
-        using (var localFrontend = new RouterSocket())
-        using (var localBackend = new RouterSocket())
-        using (var cloudFrontend = new RouterSocket())
-        using (var cloudBackend = new RouterSocket())
-        using (var stateBackend = new PublisherSocket())
-        using (var stateFrontend = new SubscriberSocket())
-        using (var monitor = new PullSocket())
+        using var localFrontend = new RouterSocket();
+        using var localBackend = new RouterSocket();
+        using var cloudFrontend = new RouterSocket();
+        using var cloudBackend = new RouterSocket();
+        using var stateBackend = new PublisherSocket();
+        using var stateFrontend = new SubscriberSocket();
+        using var monitor = new PullSocket();
+        
+        // give every socket an unique identity, e.g. LocalFrontend[Port]
+        SetIdentities(myPort,
+            localFrontend,
+            cloudFrontend,
+            localBackend,
+            stateBackend,
+            monitor,
+            cloudBackend, stateFrontend);
+
+        // subscribe to any message on the stateFrontend socket!
+        stateFrontend.Subscribe("");
+
+        // bind the serving sockets
+        localFrontend.Bind(localFrontendAddress);
+        cloudFrontend.Bind(cloudFrontendAddress);
+        localBackend.Bind(localBackendAddress);
+        stateBackend.Bind(stateBackendAddress);
+        monitor.Bind(monitorAddress);
+
+        // connect sockets to peers
+        for (var i = 1; i < args.Length; i++)
         {
-            // give every socket an unique identity, e.g. LocalFrontend[Port]
-            SetIdentities(myPort,
-                localFrontend,
-                cloudFrontend,
-                localBackend,
-                stateBackend,
-                monitor,
-                cloudBackend, stateFrontend);
+            // build the cloud back end address
+            var peerPort = int.Parse(args[i]);
+            var address = baseAddress + (peerPort + 1);
+            Console.WriteLine("[BROKER] connect to cloud peer {0}", address);
 
-            // subscribe to any message on the stateFrontend socket!
-            stateFrontend.Subscribe("");
+            // this cloudBackend connects to all peer cloudFrontends
+            cloudBackend.Connect(address);
 
-            // bind the serving sockets
-            localFrontend.Bind(localFrontendAddress);
-            cloudFrontend.Bind(cloudFrontendAddress);
-            localBackend.Bind(localBackendAddress);
-            stateBackend.Bind(stateBackendAddress);
-            monitor.Bind(monitorAddress);
+            // build the state front end address
+            address = baseAddress + (peerPort + 3);
+            Console.WriteLine("[BROKER] subscribe to state peer {0}", address);
 
-            // connect sockets to peers
-            for (var i = 1; i < args.Length; i++)
+            // this stateFrontend to all peer stateBackends
+            stateFrontend.Connect(address);
+        }
+
+        // setup the local worker queue for LRU and monitor cloud capacity
+        var workerQueue = new Queue<byte[]>();
+        int previousLocalCapacity = 0;
+
+        // receive the capacity available from other peer(s)
+        stateFrontend.ReceiveReady += (s, e) =>
+        {
+            // the message should contain the available cloud capacity
+            var capacity = e.Socket.ReceiveFrameString();
+
+            Debug.Assert(string.IsNullOrWhiteSpace(capacity), "StateFrontend: message was empty!");
+
+            int couldCapacity;
+            Debug.Assert(int.TryParse(capacity, out couldCapacity), "StateFrontend: message did not contain a number!");
+        };
+
+        // get the status message and print it
+        monitor.ReceiveReady += (s, e) =>
+        {
+            var msg = e.Socket.ReceiveFrameString();
+
+            Console.WriteLine("[MONITOR] {0}", msg);
+        };
+
+        // all local clients are connecting to this socket
+        // they send a REQ and get a REPLY
+        localFrontend.ReceiveReady += (s, e) =>
+        {
+            // [client adr][empty][message id]
+            var request = e.Socket.ReceiveMultipartMessage();
+            // register the local client for later identification if not known
+            if (!clients.Any(n => AreSame(n, request[0])))
+                clients.Add(request[0].Buffer);
+            // if we have local capacity send worker else send to cloud
+            if (workerQueue.Count > 0)
             {
-                // build the cloud back end address
-                var peerPort = int.Parse(args[i]);
-                var address = baseAddress + (peerPort + 1);
-                Console.WriteLine("[BROKER] connect to cloud peer {0}", address);
-
-                // this cloudBackend connects to all peer cloudFrontends
-                cloudBackend.Connect(address);
-
-                // build the state front end address
-                address = baseAddress + (peerPort + 3);
-                Console.WriteLine("[BROKER] subscribe to state peer {0}", address);
-
-                // this stateFrontend to all peer stateBackends
-                stateFrontend.Connect(address);
+                // get the LRU worker adr
+                var worker = workerQueue.Dequeue();
+                // wrap message with workers address
+                var msg = Wrap(worker, request);
+                // send message to the worker
+                // [worker adr][empty][client adr][empty][data]
+                localBackend.SendMultipartMessage(msg);
             }
-
-            // setup the local worker queue for LRU and monitor cloud capacity
-            var workerQueue = new Queue<byte[]>();
-            int previousLocalCapacity = 0;
-
-            // receive the capacity available from other peer(s)
-            stateFrontend.ReceiveReady += (s, e) =>
+            else
             {
-                // the message should contain the available cloud capacity
-                var capacity = e.Socket.ReceiveFrameString();
+                // get an random index for peers
+                var peerIdx = rnd.Next(peers.Count - 2) + 2;
+                // get peers address
+                var peer = peers[peerIdx];
+                // wrap message with peer's address
+                var msg = Wrap(peer, request);
+                // [peer adr][empty][client adr][empty][data]
+                cloudBackend.SendMultipartMessage(msg);
+            }
+        };
 
-                Debug.Assert(string.IsNullOrWhiteSpace(capacity), "StateFrontend: message was empty!");
+        // the workers are connected to this socket
+        // we get a REPLY either for a cloud client [worker adr][empty][peer adr][empty][peer client adr][empty][data]
+        // or local client [worker adr][empty][client adr][empty][data]
+        // or a READY message [worker adr][empty][WORKER_READY]
+        localBackend.ReceiveReady += (s, e) =>
+        {
+            // a worker can send "READY" or a request
+            // or an REPLAY
+            var msg = e.Socket.ReceiveMultipartMessage();
 
-                int couldCapacity;
-                Debug.Assert(int.TryParse(capacity, out couldCapacity), "StateFrontend: message did not contain a number!");
-            };
+            // just to make sure we received a proper message
+            Debug.Assert(msg != null && msg.FrameCount > 0, "[LocalBackend] message was empty or frame count == 0!");
 
-            // get the status message and print it
-            monitor.ReceiveReady += (s, e) =>
+            // get the workers identity
+            var id = Unwrap(msg);
+            // this worker done in either way so add it to available workers
+            workerQueue.Enqueue(id);
+            // if it is NOT a ready message we need to route the message
+            // it could be a reply to a peer or a local client
+            // [WORKER_READY] or [client adr][empty][data] or [peer adr][empty][peer client adr][empty][data]
+            if (msg[0].Buffer[0] != WorkerReady)
             {
-                var msg = e.Socket.ReceiveFrameString();
+                Debug.Assert(msg.FrameCount > 2, "[LocalBackend] None READY message malformed");
 
-                Console.WriteLine("[MONITOR] {0}", msg);
-            };
+                // if the adr (first frame) is any of the clients send the REPLY there
+                // and send it to the peer otherwise
+                if (clients.Any(n => AreSame(n, msg.First)))
+                    localFrontend.SendMultipartMessage(msg);
+                else
+                    cloudFrontend.SendMultipartMessage(msg);
+            }
+        };
 
-            // all local clients are connecting to this socket
-            // they send a REQ and get a REPLY
-            localFrontend.ReceiveReady += (s, e) =>
+        // this socket is connected to all peers
+        // we receive either a REQ or a REPLY form a peer
+        // REQ [peer adr][empty][peer client adr][empty][message id] -> send to peer for processing
+        // REP [peer adr][empty][client adr][empty][message id] -> send to local client
+        cloudBackend.ReceiveReady += (s, e) =>
+        {
+            var msg = e.Socket.ReceiveMultipartMessage();
+
+            // just to make sure we received a message
+            Debug.Assert(msg != null && msg.FrameCount > 0, "[CloudBackend] message was empty or frame count == 0!");
+
+            // we need the peers address for proper addressing
+            var peerAdr = Unwrap(msg);
+
+            // the remaining message must be at least 3 frames!
+            Debug.Assert(msg.FrameCount > 2, "[CloudBackend] message malformed");
+
+            // if the id is any of the local clients it is a REPLY
+            // and a REQ otherwise
+            if (clients.Any(n => AreSame(n, msg.First)))
             {
                 // [client adr][empty][message id]
-                var request = e.Socket.ReceiveMultipartMessage();
-                // register the local client for later identification if not known
-                if (!clients.Any(n => AreSame(n, request[0])))
-                    clients.Add(request[0].Buffer);
-                // if we have local capacity send worker else send to cloud
-                if (workerQueue.Count > 0)
-                {
-                    // get the LRU worker adr
-                    var worker = workerQueue.Dequeue();
-                    // wrap message with workers address
-                    var msg = Wrap(worker, request);
-                    // send message to the worker
-                    // [worker adr][empty][client adr][empty][data]
-                    localBackend.SendMultipartMessage(msg);
-                }
-                else
-                {
-                    // get an random index for peers
-                    var peerIdx = rnd.Next(peers.Count - 2) + 2;
-                    // get peers address
-                    var peer = peers[peerIdx];
-                    // wrap message with peer's address
-                    var msg = Wrap(peer, request);
-                    // [peer adr][empty][client adr][empty][data]
-                    cloudBackend.SendMultipartMessage(msg);
-                }
-            };
-
-            // the workers are connected to this socket
-            // we get a REPLY either for a cloud client [worker adr][empty][peer adr][empty][peer client adr][empty][data]
-            // or local client [worker adr][empty][client adr][empty][data]
-            // or a READY message [worker adr][empty][WORKER_READY]
-            localBackend.ReceiveReady += (s, e) =>
+                localFrontend.SendMultipartMessage(msg);
+            }
+            else
             {
-                // a worker can send "READY" or a request
-                // or an REPLAY
-                var msg = e.Socket.ReceiveMultipartMessage();
+                // add the peers address to the request
+                var request = Wrap(peerAdr, msg);
+                // [peer adr][empty][peer client adr][empty][message id]
+                cloudFrontend.SendMultipartMessage(request);
+            }
+        };
 
-                // just to make sure we received a proper message
-                Debug.Assert(msg != null && msg.FrameCount > 0, "[LocalBackend] message was empty or frame count == 0!");
+        // all peers are binding to this socket
+        // we receive REPLY or REQ from peers
+        // REQ [peer adr][empty][peer client adr][empty][data] -> send to local worker for processing
+        // REP [peer adr][empty][client adr][empty][data] -> send to local client
+        cloudFrontend.ReceiveReady += (s, e) =>
+        {
+            var msg = e.Socket.ReceiveMultipartMessage();
 
-                // get the workers identity
-                var id = Unwrap(msg);
-                // this worker done in either way so add it to available workers
-                workerQueue.Enqueue(id);
-                // if it is NOT a ready message we need to route the message
-                // it could be a reply to a peer or a local client
-                // [WORKER_READY] or [client adr][empty][data] or [peer adr][empty][peer client adr][empty][data]
-                if (msg[0].Buffer[0] != WorkerReady)
-                {
-                    Debug.Assert(msg.FrameCount > 2, "[LocalBackend] None READY message malformed");
+            // just to make sure we received a message
+            Debug.Assert(msg != null && msg.FrameCount > 0, "[CloudFrontend] message was empty or frame count == 0!");
 
-                    // if the adr (first frame) is any of the clients send the REPLY there
-                    // and send it to the peer otherwise
-                    if (clients.Any(n => AreSame(n, msg.First)))
-                        localFrontend.SendMultipartMessage(msg);
-                    else
-                        cloudFrontend.SendMultipartMessage(msg);
-                }
-            };
+            // we may need the peers address for proper addressing
+            var peerAdr = Unwrap(msg);
 
-            // this socket is connected to all peers
-            // we receive either a REQ or a REPLY form a peer
-            // REQ [peer adr][empty][peer client adr][empty][message id] -> send to peer for processing
-            // REP [peer adr][empty][client adr][empty][message id] -> send to local client
-            cloudBackend.ReceiveReady += (s, e) =>
+            // the remaining message must be at least 3 frames!
+            Debug.Assert(msg.FrameCount > 2, "[CloudFrontend] message malformed");
+
+            // if the address is any of the local clients it is a REPLY
+            // and a REQ otherwise
+            if (clients.Any(n => AreSame(n, msg.First)))
+                localFrontend.SendMultipartMessage(msg);
+            else
             {
-                var msg = e.Socket.ReceiveMultipartMessage();
+                // in order to know which per to send back the peers adr must be added again
+                var original = Wrap(peerAdr, msg);
 
-                // just to make sure we received a message
-                Debug.Assert(msg != null && msg.FrameCount > 0, "[CloudBackend] message was empty or frame count == 0!");
+                // reduce the capacity to reflect the use of a worker by a cloud request
+                previousLocalCapacity = workerQueue.Count;
+                // get the LRU worker
+                var workerAdr = workerQueue.Dequeue();
+                // wrap the message with the worker address and send
+                var request = Wrap(workerAdr, original);
+                localBackend.SendMultipartMessage(request);
+            }
+        };
 
-                // we need the peers address for proper addressing
-                var peerAdr = Unwrap(msg);
+        // in order to reduce chatter we only check to see if we have local capacity to provide to cloud
+        // periodically every 2 seconds with a timer
+        var timer = new NetMQTimer((int)TimeSpan.FromSeconds(2).TotalMilliseconds);
 
-                // the remaining message must be at least 3 frames!
-                Debug.Assert(msg.FrameCount > 2, "[CloudBackend] message malformed");
-
-                // if the id is any of the local clients it is a REPLY
-                // and a REQ otherwise
-                if (clients.Any(n => AreSame(n, msg.First)))
-                {
-                    // [client adr][empty][message id]
-                    localFrontend.SendMultipartMessage(msg);
-                }
-                else
-                {
-                    // add the peers address to the request
-                    var request = Wrap(peerAdr, msg);
-                    // [peer adr][empty][peer client adr][empty][message id]
-                    cloudFrontend.SendMultipartMessage(request);
-                }
-            };
-
-            // all peers are binding to this socket
-            // we receive REPLY or REQ from peers
-            // REQ [peer adr][empty][peer client adr][empty][data] -> send to local worker for processing
-            // REP [peer adr][empty][client adr][empty][data] -> send to local client
-            cloudFrontend.ReceiveReady += (s, e) =>
+        timer.Elapsed += (t, e) =>
+        {
+            // send message only if the previous send information changed
+            if (previousLocalCapacity != workerQueue.Count)
             {
-                var msg = e.Socket.ReceiveMultipartMessage();
-
-                // just to make sure we received a message
-                Debug.Assert(msg != null && msg.FrameCount > 0, "[CloudFrontend] message was empty or frame count == 0!");
-
-                // we may need the peers address for proper addressing
-                var peerAdr = Unwrap(msg);
-
-                // the remaining message must be at least 3 frames!
-                Debug.Assert(msg.FrameCount > 2, "[CloudFrontend] message malformed");
-
-                // if the address is any of the local clients it is a REPLY
-                // and a REQ otherwise
-                if (clients.Any(n => AreSame(n, msg.First)))
-                    localFrontend.SendMultipartMessage(msg);
-                else
-                {
-                    // in order to know which per to send back the peers adr must be added again
-                    var original = Wrap(peerAdr, msg);
-
-                    // reduce the capacity to reflect the use of a worker by a cloud request
-                    previousLocalCapacity = workerQueue.Count;
-                    // get the LRU worker
-                    var workerAdr = workerQueue.Dequeue();
-                    // wrap the message with the worker address and send
-                    var request = Wrap(workerAdr, original);
-                    localBackend.SendMultipartMessage(request);
-                }
-            };
-
-            // in order to reduce chatter we only check to see if we have local capacity to provide to cloud
-            // periodically every 2 seconds with a timer
-            var timer = new NetMQTimer((int)TimeSpan.FromSeconds(2).TotalMilliseconds);
-
-            timer.Elapsed += (t, e) =>
-            {
-                // send message only if the previous send information changed
-                if (previousLocalCapacity != workerQueue.Count)
-                {
-                    // set the information
-                    previousLocalCapacity = workerQueue.Count;
-                    // generate the message
-                    var msg = new NetMQMessage();
-                    var data = new NetMQFrame(previousLocalCapacity.ToString());
-                    msg.Append(data);
-                    var stateMessage = Wrap(Encoding.UTF8.GetBytes(me), msg);
-                    // publish info
-                    stateBackend.SendMultipartMessage(stateMessage);
-                }
-
-                // restart the timer
-                e.Timer.Enable = true;
-            };
-
-            // start all clients and workers as threads
-            var clientTasks = new Thread[NbrClients];
-            var workerTasks = new Thread[NbrWorker];
-
-            for (var i = 0; i < NbrClients; i++)
-            {
-                var client = new Client(localFrontendAddress, monitorAddress, (byte)i);
-                clientTasks[i] = new Thread(client.Run) { Name = $"Client_{i}" };
-                clientTasks[i].Start();
+                // set the information
+                previousLocalCapacity = workerQueue.Count;
+                // generate the message
+                var msg = new NetMQMessage();
+                var data = new NetMQFrame(previousLocalCapacity.ToString());
+                msg.Append(data);
+                var stateMessage = Wrap(Encoding.UTF8.GetBytes(me), msg);
+                // publish info
+                stateBackend.SendMultipartMessage(stateMessage);
             }
 
-            for (var i = 0; i < NbrWorker; i++)
-            {
-                var worker = new Worker(localBackendAddress, (byte)i);
-                workerTasks[i] = new Thread(worker.Run) { Name = $"Worker_{i}" };
-                workerTasks[i].Start();
-            }
+            // restart the timer
+            e.Timer.Enable = true;
+        };
 
-            // create poller and add sockets & timer
-            var poller = new NetMQPoller
-            {
-                localFrontend,
-                localBackend,
-                cloudFrontend,
-                cloudBackend,
-                stateFrontend,
-                stateBackend,
-                monitor,
-                timer
-            };
+        // start all clients and workers as threads
+        var clientTasks = new Thread[NbrClients];
+        var workerTasks = new Thread[NbrWorker];
 
-            // start monitoring the sockets
-            poller.RunAsync();
-
-            // we wait for a CTRL+C to exit
-            while (s_keepRunning)
-                Thread.Sleep(100);
-
-            Console.WriteLine("Ctrl-C encountered! Exiting the program!");
-
-            if (poller.IsRunning)
-                poller.Stop();
-
-            poller.Dispose();
+        for (var i = 0; i < NbrClients; i++)
+        {
+            var client = new Client(localFrontendAddress, monitorAddress, (byte)i);
+            clientTasks[i] = new Thread(client.Run) { Name = $"Client_{i}" };
+            clientTasks[i].Start();
         }
+
+        for (var i = 0; i < NbrWorker; i++)
+        {
+            var worker = new Worker(localBackendAddress, (byte)i);
+            workerTasks[i] = new Thread(worker.Run) { Name = $"Worker_{i}" };
+            workerTasks[i].Start();
+        }
+
+        // create poller and add sockets & timer
+        using var poller = new NetMQPoller
+        {
+            localFrontend,
+            localBackend,
+            cloudFrontend,
+            cloudBackend,
+            stateFrontend,
+            stateBackend,
+            monitor,
+            timer
+        };
+
+        // start monitoring the sockets
+        poller.RunAsync();
+
+        // we wait for a CTRL+C to exit
+        while (s_keepRunning)
+            Thread.Sleep(100);
+
+        Console.WriteLine("Ctrl-C encountered! Exiting the program!");
+
+        if (poller.IsRunning)
+            poller.Stop();
     }
 
     /// <summary>

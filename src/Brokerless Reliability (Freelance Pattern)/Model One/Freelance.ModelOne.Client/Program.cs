@@ -35,19 +35,17 @@ static bool TryRequest(string endpoint, string requestString)
 {
     Console.WriteLine("Trying echo service at {0}", endpoint);
 
-    using (var client = new RequestSocket())
-    {
-        client.Options.Linger = TimeSpan.Zero;
+    using var client = new RequestSocket();
+    client.Options.Linger = TimeSpan.Zero;
 
-        client.Connect(endpoint);
+    client.Connect(endpoint);
 
-        client.SendFrame(requestString);
-        client.ReceiveReady += ClientOnReceiveReady;
-        bool pollResult = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
-        client.ReceiveReady -= ClientOnReceiveReady;
-        client.Disconnect(endpoint);
-        return pollResult;
-    }
+    client.SendFrame(requestString);
+    client.ReceiveReady += ClientOnReceiveReady;
+    bool pollResult = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
+    client.ReceiveReady -= ClientOnReceiveReady;
+    client.Disconnect(endpoint);
+    return pollResult;
 }
 
 static void ClientOnReceiveReady(object sender, NetMQSocketEventArgs args)

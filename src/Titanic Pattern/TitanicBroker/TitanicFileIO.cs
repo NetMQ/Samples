@@ -140,10 +140,8 @@ public class TitanicFileIO : ITitanicIO
     {
         lock (m_syncRoot)
         {
-            using (var file = File.Open (m_titanicQueue, FileMode.Open, FileAccess.ReadWrite))
-            {
-                return ReadRequestEntries (file).Where (predicate).ToArray ();
-            }
+            using var file = File.Open(m_titanicQueue, FileMode.Open, FileAccess.ReadWrite);
+            return ReadRequestEntries(file).Where(predicate).ToArray();
         }
     }
 
@@ -165,14 +163,12 @@ public class TitanicFileIO : ITitanicIO
     {
         lock (m_syncRoot)
         {
-            using (var file = File.OpenWrite (m_titanicQueue))
-            {
-                var source = CreateFileEntry (entry.RequestId, entry.State);
+            using var file = File.OpenWrite(m_titanicQueue);
+            var source = CreateFileEntry(entry.RequestId, entry.State);
 
-                var position = entry.Position == -1 ? file.Seek (0, SeekOrigin.End) : entry.Position;
+            var position = entry.Position == -1 ? file.Seek(0, SeekOrigin.End) : entry.Position;
 
-                WriteRequest (file, source, file.Seek (position, SeekOrigin.Begin));
-            }
+            WriteRequest(file, source, file.Seek(position, SeekOrigin.Begin));
         }
     }
 
@@ -289,13 +285,11 @@ public class TitanicFileIO : ITitanicIO
     {
         var filename = op == TitanicOperation.Request ? GetRequestFileName (id) : GetReplyFileName (id);
 
-        using (var file = File.Open (filename, FileMode.OpenOrCreate))
-        using (var w = new StreamWriter (file))
-        {
-            // save each frame as string -> upon reading it back use Read (string)
-            for (var i = 0; i < message.FrameCount; i++)
-                w.WriteLine (message[i].ConvertToString ());
-        }
+        using var file = File.Open(filename, FileMode.OpenOrCreate);
+        using var w = new StreamWriter(file);
+        // save each frame as string -> upon reading it back use Read (string)
+        for (var i = 0; i < message.FrameCount; i++)
+            w.WriteLine(message[i].ConvertToString());
 
         return true; // just needed for the async method(!)
     }
@@ -436,19 +430,17 @@ public class TitanicFileIO : ITitanicIO
     {
         lock (m_syncRoot)
         {
-            using (var file = File.Open (m_titanicQueue, FileMode.Open, FileAccess.ReadWrite))
-            {
-                // get all NOT closed requests
-                var entries = ReadRawRequestEntries (file).Where (e => e[0] != RequestEntry.Is_Closed);
-                // reset the file, in order to recreate
-                file.SetLength (0);
+            using var file = File.Open(m_titanicQueue, FileMode.Open, FileAccess.ReadWrite);
+            // get all NOT closed requests
+            var entries = ReadRawRequestEntries(file).Where(e => e[0] != RequestEntry.Is_Closed);
+            // reset the file, in order to recreate
+            file.SetLength(0);
 
-                // write all collected entries to queue -> will only be the not closed one
-                foreach (var entry in entries)
-                {
-                    // write the entry at the current position in the file
-                    file.Write (entry, 0, entry.Length);
-                }
+            // write all collected entries to queue -> will only be the not closed one
+            foreach (var entry in entries)
+            {
+                // write the entry at the current position in the file
+                file.Write(entry, 0, entry.Length);
             }
         }
     }

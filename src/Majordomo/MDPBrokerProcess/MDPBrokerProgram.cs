@@ -73,14 +73,12 @@ internal static class MDPBrokerProgram
 
     private static async Task RunBroker (CancellationTokenSource cts)
     {
-        using (var broker = new MDPBroker ("tcp://localhost:5555"))
-        {
-            broker.LogInfoReady += (s, e) => Console.WriteLine (e.Info);
+        using var broker = new MDPBroker("tcp://localhost:5555");
+        broker.LogInfoReady += (s, e) => Console.WriteLine(e.Info);
 
-            if (s_verbose)
-                broker.DebugInfoReady += (s, e) => Console.WriteLine (e.Info);
+        if (s_verbose)
+            broker.DebugInfoReady += (s, e) => Console.WriteLine(e.Info);
 
-            await broker.Run (cts.Token);
-        }
+        await broker.Run(cts.Token);
     }
 }

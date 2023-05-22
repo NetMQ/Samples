@@ -129,60 +129,58 @@ public class TitanicBroker : ITitanicBroker
                      [CanBeNull] IMDPWorker closeWorker = null,
                      [CanBeNull] IMDPClient serviceCallClient = null)
     {
-        using (var pipeStart = new PairSocket ())
-        using (var pipeEnd = new PairSocket ())
-        using (var cts = new CancellationTokenSource ())
+        using var pipeStart = new PairSocket();
+        using var pipeEnd = new PairSocket();
+        using var cts = new CancellationTokenSource();
+        // set up the inter thread communication pipe
+        pipeStart.Bind(_titanic_internal_communication);
+        pipeEnd.Connect(_titanic_internal_communication);
+
+        // start the three child tasks
+        var requestTask = Task.Run(() => ProcessTitanicRequest(pipeEnd, requestWorker), cts.Token);
+        var replyTask = Task.Run(() => ProcessTitanicReply(replyWorker), cts.Token);
+        var closeTask = Task.Run(() => ProcessTitanicClose(closeWorker), cts.Token);
+
+        var tasks = new[] { requestTask, replyTask, closeTask };
+
+        while (true)
         {
-            // set up the inter thread communication pipe
-            pipeStart.Bind (_titanic_internal_communication);
-            pipeEnd.Connect (_titanic_internal_communication);
+            // wait for 1s for a new request from 'Request' to process
+            var input = pipeStart.Poll(PollEvents.PollIn, TimeSpan.FromMilliseconds(1000));
 
-            // start the three child tasks
-            var requestTask = Task.Run (() => ProcessTitanicRequest (pipeEnd, requestWorker), cts.Token);
-            var replyTask = Task.Run (() => ProcessTitanicReply (replyWorker), cts.Token);
-            var closeTask = Task.Run (() => ProcessTitanicClose (closeWorker), cts.Token);
-
-            var tasks = new[] { requestTask, replyTask, closeTask };
-
-            while (true)
+            // any message available? -> process it
+            if ((input & PollEvents.PollIn) == PollEvents.PollIn)
             {
-                // wait for 1s for a new request from 'Request' to process
-                var input = pipeStart.Poll (PollEvents.PollIn, TimeSpan.FromMilliseconds (1000));
+                // only one frame will be send [Guid]
+                var msg = pipeStart.ReceiveFrameString();
 
-                // any message available? -> process it
-                if ((input & PollEvents.PollIn) == PollEvents.PollIn)
+                Guid guid;
+                if (!Guid.TryParse(msg, out guid))
+                    Log("[TITANIC BROKER] Received a malformed GUID via pipe - throw it away");
+                else
                 {
-                    // only one frame will be send [Guid]
-                    var msg = pipeStart.ReceiveFrameString ();
+                    Log($"[TITANIC BROKER] Received request GUID {msg} via pipe");
+                    // now we have a valid GUID - save it to disk for further use
+                    m_io.SaveNewRequestEntry(guid);
+                }
+            }
+            //! now dispatch (brute force) the requests -> SHOULD BE MORE INTELLIGENT (!)
+            // dispatching will also worry about the handling of a potential reply
+            // dispatch only requests which have not been closed
+            foreach (var entry in m_io.GetNotClosedRequestEntries().Where(entry => entry != default(RequestEntry)))
+            {
+                if (DispatchRequests(entry.RequestId, serviceCallClient))
+                    m_io.SaveProcessedRequestEntry(entry);
+            }
 
-                    Guid guid;
-                    if (!Guid.TryParse (msg, out guid))
-                        Log ("[TITANIC BROKER] Received a malformed GUID via pipe - throw it away");
-                    else
-                    {
-                        Log ($"[TITANIC BROKER] Received request GUID {msg} via pipe");
-                        // now we have a valid GUID - save it to disk for further use
-                        m_io.SaveNewRequestEntry (guid);
-                    }
-                }
-                //! now dispatch (brute force) the requests -> SHOULD BE MORE INTELLIGENT (!)
-                // dispatching will also worry about the handling of a potential reply
-                // dispatch only requests which have not been closed
-                foreach (var entry in m_io.GetNotClosedRequestEntries ().Where (entry => entry != default (RequestEntry)))
-                {
-                    if (DispatchRequests (entry.RequestId, serviceCallClient))
-                        m_io.SaveProcessedRequestEntry (entry);
-                }
-
-                //! should implement some sort of restart
-                // beware of the silently dieing threads - must be detected!
-                if (DidAnyTaskStopp (tasks))
-                {
-                    // stop all threads
-                    cts.Cancel ();
-                    // stop processing!
-                    break;
-                }
+            //! should implement some sort of restart
+            // beware of the silently dieing threads - must be detected!
+            if (DidAnyTaskStopp(tasks))
+            {
+                // stop all threads
+                cts.Cancel();
+                // stop processing!
+                break;
             }
         }
     }
@@ -198,42 +196,40 @@ public class TitanicBroker : ITitanicBroker
     {
         // get a MDP worker with an automatic id and register with the service "titanic.request"
         // the worker will automatically start and connect to a MDP Broker at the indicated address
-        using (var worker = mdpWorker ?? new MDPWorker (m_titanicAddress, TitanicOperation.Request.ToString ()))
+        using var worker = mdpWorker ?? new MDPWorker(m_titanicAddress, TitanicOperation.Request.ToString());
+        NetMQMessage reply = null;
+
+        while (true)
         {
-            NetMQMessage reply = null;
+            // initiate the communication with sending a 'null', since there is no initial reply
+            // a request should be [service name][request data]
+            var request = worker.Receive(reply);
 
-            while (true)
-            {
-                // initiate the communication with sending a 'null', since there is no initial reply
-                // a request should be [service name][request data]
-                var request = worker.Receive (reply);
+            Log($"[TITANIC REQUEST] Received request: {request}");
 
-                Log ($"[TITANIC REQUEST] Received request: {request}");
+            //! has there been a breaking cause? -> exit
+            if (ReferenceEquals(request, null))
+                break;
 
-                //! has there been a breaking cause? -> exit
-                if (ReferenceEquals (request, null))
-                    break;
+            //! check if service exists! and return 'Unknown' if not
 
-                //! check if service exists! and return 'Unknown' if not
+            // generate Guid for the request
+            var requestId = Guid.NewGuid();
+            // save request to file -> [service name][request data]
+            m_io.SaveMessage(TitanicOperation.Request, requestId, request);
 
-                // generate Guid for the request
-                var requestId = Guid.NewGuid ();
-                // save request to file -> [service name][request data]
-                m_io.SaveMessage (TitanicOperation.Request, requestId, request);
+            Log($"[TITANIC REQUEST] sending through pipe: {requestId}");
 
-                Log ($"[TITANIC REQUEST] sending through pipe: {requestId}");
+            // send GUID through message queue to main thread
+            pipe.SendFrame(requestId.ToString());
+            // return GUID via reply message via worker.Receive call
+            reply = new NetMQMessage();
+            // [Guid]
+            reply.Push(requestId.ToString());
+            // [Ok][Guid]
+            reply.Push(TitanicReturnCode.Ok.ToString());
 
-                // send GUID through message queue to main thread
-                pipe.SendFrame (requestId.ToString ());
-                // return GUID via reply message via worker.Receive call
-                reply = new NetMQMessage ();
-                // [Guid]
-                reply.Push (requestId.ToString ());
-                // [Ok][Guid]
-                reply.Push (TitanicReturnCode.Ok.ToString ());
-
-                Log ($"[TITANIC REQUEST] sending reply: {reply}");
-            }
+            Log($"[TITANIC REQUEST] sending reply: {reply}");
         }
     }
 
@@ -246,45 +242,43 @@ public class TitanicBroker : ITitanicBroker
     {
         // get a MDP worker with an automatic id and register with the service "titanic.reply"
         // the worker will automatically start and connect to the indicated address
-        using (var worker = mdpWorker ?? new MDPWorker (m_titanicAddress, TitanicOperation.Reply.ToString ()))
+        using var worker = mdpWorker ?? new MDPWorker(m_titanicAddress, TitanicOperation.Reply.ToString());
+        NetMQMessage reply = null;
+
+        while (true)
         {
-            NetMQMessage reply = null;
+            // initiate the communication to MDP Broker with sending a 'null',
+            // since there is no initial reply everytime thereafter the reply will be send
+            var request = worker.Receive(reply);
 
-            while (true)
+            Log($"TITANIC REPLY] received: {request}");
+
+            //! has there been a breaking cause? -> exit
+            if (ReferenceEquals(request, null))
+                break;
+
+            var requestIdAsString = request.Pop().ConvertToString();
+            var requestId = Guid.Parse(requestIdAsString);
+
+            if (m_io.ExistsMessage(TitanicOperation.Reply, requestId))
             {
-                // initiate the communication to MDP Broker with sending a 'null',
-                // since there is no initial reply everytime thereafter the reply will be send
-                var request = worker.Receive (reply);
+                Log($"[TITANIC REPLY] reply for request exists: {requestId}");
 
-                Log ($"TITANIC REPLY] received: {request}");
-
-                //! has there been a breaking cause? -> exit
-                if (ReferenceEquals (request, null))
-                    break;
-
-                var requestIdAsString = request.Pop ().ConvertToString ();
-                var requestId = Guid.Parse (requestIdAsString);
-
-                if (m_io.ExistsMessage (TitanicOperation.Reply, requestId))
-                {
-                    Log ($"[TITANIC REPLY] reply for request exists: {requestId}");
-
-                    reply = m_io.GetMessage (TitanicOperation.Reply, requestId);    // [service][reply]
-                    reply.Push (TitanicReturnCode.Ok.ToString ());                  // ["OK"][service][reply]
-                }
-                else
-                {
-                    reply = new NetMQMessage ();
-
-                    var replyCommand = (m_io.ExistsMessage (TitanicOperation.Request, requestId)
-                                            ? TitanicReturnCode.Pending
-                                            : TitanicReturnCode.Unknown);
-
-                    reply.Push (replyCommand.ToString ());
-                }
-
-                Log ($"[TITANIC REPLY] reply: {reply}");
+                reply = m_io.GetMessage(TitanicOperation.Reply, requestId);    // [service][reply]
+                reply.Push(TitanicReturnCode.Ok.ToString());                  // ["OK"][service][reply]
             }
+            else
+            {
+                reply = new NetMQMessage();
+
+                var replyCommand = (m_io.ExistsMessage(TitanicOperation.Request, requestId)
+                                        ? TitanicReturnCode.Pending
+                                        : TitanicReturnCode.Unknown);
+
+                reply.Push(replyCommand.ToString());
+            }
+
+            Log($"[TITANIC REPLY] reply: {reply}");
         }
     }
 
@@ -296,33 +290,31 @@ public class TitanicBroker : ITitanicBroker
     {
         // get a MDP worker with an automatic id and register with the service "titanic.Close"
         // the worker will automatically start and connect to MDP Broker with the indicated address
-        using (var worker = mdpWorker ?? new MDPWorker (m_titanicAddress, TitanicOperation.Close.ToString ()))
+        using var worker = mdpWorker ?? new MDPWorker(m_titanicAddress, TitanicOperation.Close.ToString());
+        NetMQMessage reply = null;
+
+        while (true)
         {
-            NetMQMessage reply = null;
+            // initiate the communication with sending a null, since there is no reply yet
+            var request = worker.Receive(reply);
 
-            while (true)
-            {
-                // initiate the communication with sending a null, since there is no reply yet
-                var request = worker.Receive (reply);
+            Log($"[TITANIC CLOSE] received: {request}");
 
-                Log ($"[TITANIC CLOSE] received: {request}");
+            //! has there been a breaking cause? -> exit
+            if (ReferenceEquals(request, null))
+                break;
 
-                //! has there been a breaking cause? -> exit
-                if (ReferenceEquals (request, null))
-                    break;
+            // we expect [Guid] as the only frame
+            var guidAsString = request.Pop().ConvertToString();
+            var guid = Guid.Parse(guidAsString);
 
-                // we expect [Guid] as the only frame
-                var guidAsString = request.Pop ().ConvertToString ();
-                var guid = Guid.Parse (guidAsString);
+            Log($"[TITANIC CLOSE] closing {guid}");
 
-                Log ($"[TITANIC CLOSE] closing {guid}");
-
-                // close the request
-                m_io.CloseRequest (guid);
-                // send back the confirmation
-                reply = new NetMQMessage ();
-                reply.Push (TitanicReturnCode.Ok.ToString ());
-            }
+            // close the request
+            m_io.CloseRequest(guid);
+            // send back the confirmation
+            reply = new NetMQMessage();
+            reply.Push(TitanicReturnCode.Ok.ToString());
         }
     }
 
@@ -382,34 +374,32 @@ public class TitanicBroker : ITitanicBroker
     private NetMQMessage ServiceCall ([NotNull] string serviceName, [NotNull] NetMQMessage request, [CanBeNull]IMDPClient serviceClient = null)
     {
         // create MDPClient session and send the request to MDPBroker
-        using (var session = serviceClient ?? new MDPClient (m_titanicAddress))
+        using var session = serviceClient ?? new MDPClient(m_titanicAddress);
+        session.Timeout = TimeSpan.FromMilliseconds(1000);     // 1s
+        session.Retries = 1;                                    // only 1 retry
+                                                                // use MMI protocol to check if service is available
+        var mmi = new NetMQMessage();
+        // add name of service to inquire
+        mmi.Push(serviceName);
+        // request mmi.service resolution
+        var reply = session.Send("mmi.service", mmi);
+        // first frame should be result of inquiry
+        var rc = reply[0].ConvertToString();
+        var answer = (MmiCode)Enum.Parse(typeof(MmiCode), rc);
+        // answer == "Ok" -> service is available -> make the request
+        if (answer == MmiCode.Ok)
         {
-            session.Timeout = TimeSpan.FromMilliseconds (1000);     // 1s
-            session.Retries = 1;                                    // only 1 retry
-            // use MMI protocol to check if service is available
-            var mmi = new NetMQMessage ();
-            // add name of service to inquire
-            mmi.Push (serviceName);
-            // request mmi.service resolution
-            var reply = session.Send ("mmi.service", mmi);
-            // first frame should be result of inquiry
-            var rc = reply[0].ConvertToString ();
-            var answer = (MmiCode) Enum.Parse (typeof (MmiCode), rc);
-            // answer == "Ok" -> service is available -> make the request
-            if (answer == MmiCode.Ok)
-            {
-                Log ($"[TITANIC SERVICECALL] -> {serviceName} - {request}");
+            Log($"[TITANIC SERVICECALL] -> {serviceName} - {request}");
 
-                return session.Send (serviceName, request);
-            }
-
-            Log ($"[TITANIC SERVICECALL] Service {serviceName} (RC = {answer}/{request}) is not available.");
-
-            //! shall this information be available for request? Unknown or Pending
-            //! so TitanicRequest could utilize this information
-
-            return null;
+            return session.Send(serviceName, request);
         }
+
+        Log($"[TITANIC SERVICECALL] Service {serviceName} (RC = {answer}/{request}) is not available.");
+
+        //! shall this information be available for request? Unknown or Pending
+        //! so TitanicRequest could utilize this information
+
+        return null;
     }
 
     /// <summary>

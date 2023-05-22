@@ -12,49 +12,49 @@ var requestMessage = new NetMQMessage(1);
 
 requestMessage.Append("Hi");
 
-using (var progressPublisher = new PublisherSocket())
+using var progressPublisher = new PublisherSocket();
+
+const string pubSubAddress = "tcp://127.0.0.1:5556";
+
+progressPublisher.Bind(pubSubAddress);
+
+SubscriberContinuousLoop(pubSubAddress, requestString);
+
+while (true)
 {
-    const string pubSubAddress = "tcp://127.0.0.1:5556";
-    progressPublisher.Bind(pubSubAddress);
-    SubscriberContinuousLoop(pubSubAddress, requestString);
-    while (true)
-    {
-        var responseString = RequestSocket.RequestResponseMultipartMessageWithRetry(serverAddress, requestMessage,
-            requestRetries, requestTimeout, progressPublisher);
-    }
+    var responseString = RequestSocket.RequestResponseMultipartMessageWithRetry(serverAddress, requestMessage,
+        requestRetries, requestTimeout, progressPublisher);
 }
 
 static void SubscriberContinuousLoop(string pubSubAddress, string requestString)
 {
     Task.Factory.StartNew(() =>
     {
-        using (var progressSubscriber = new SubscriberSocket())
+        using var progressSubscriber = new SubscriberSocket();
+        progressSubscriber.Connect(pubSubAddress);
+        progressSubscriber.SubscribeToAnyTopic();
+        while (true)
         {
-            progressSubscriber.Connect(pubSubAddress);
-            progressSubscriber.SubscribeToAnyTopic();
-            while (true)
-            {
-                var topic = progressSubscriber.ReceiveFrameString();
-                //RequestSocket.ProgressTopic progressTopic;
-                //Enum.TryParse(topic, out progressTopic);
-                //switch (progressTopic)
-                //{
-                //    case RequestSocket.ProgressTopic.Send:
-                //        Console.WriteLine("C: Sending {0}", requestString);
-                //        break;
-                //    case RequestSocket.ProgressTopic.Retry:
-                //        Console.WriteLine("C: No response from server, retrying...");
-                //        break;
-                //    case RequestSocket.ProgressTopic.Failure:
-                //        Console.WriteLine("C: Server seems to be offline, abandoning");
-                //        break;
-                //    case RequestSocket.ProgressTopic.Success:
-                //        Console.WriteLine("C: Server replied OK");
-                //        break;
-                //    default:
-                //        throw new ArgumentOutOfRangeException();
-                //}
-            }
+            var topic = progressSubscriber.ReceiveFrameString();
+            //RequestSocket.ProgressTopic progressTopic;
+            //Enum.TryParse(topic, out progressTopic);
+            //switch (progressTopic)
+            //{
+            //    case RequestSocket.ProgressTopic.Send:
+            //        Console.WriteLine("C: Sending {0}", requestString);
+            //        break;
+            //    case RequestSocket.ProgressTopic.Retry:
+            //        Console.WriteLine("C: No response from server, retrying...");
+            //        break;
+            //    case RequestSocket.ProgressTopic.Failure:
+            //        Console.WriteLine("C: Server seems to be offline, abandoning");
+            //        break;
+            //    case RequestSocket.ProgressTopic.Success:
+            //        Console.WriteLine("C: Server replied OK");
+            //        break;
+            //    default:
+            //        throw new ArgumentOutOfRangeException();
+            //}
         }
     });
 }

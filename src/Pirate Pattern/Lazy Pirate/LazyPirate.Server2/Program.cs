@@ -4,30 +4,29 @@ const string serverEndpoint = "tcp://127.0.0.1:5555";
 
 var random = new Random();
 
-using (var server = new ResponseSocket())
+using var server = new ResponseSocket();
+
+Console.WriteLine("S: Binding address {0}", serverEndpoint);
+server.Bind(serverEndpoint);
+
+var cycles = 0;
+
+while (true)
 {
-    Console.WriteLine("S: Binding address {0}", serverEndpoint);
-    server.Bind(serverEndpoint);
+    var request = server.ReceiveFrameString();
+    cycles++;
 
-    var cycles = 0;
-
-    while (true)
+    if (cycles > 3 && random.Next(0, 10) == 0)
     {
-        var request = server.ReceiveFrameString();
-        cycles++;
-
-        if (cycles > 3 && random.Next(0, 10) == 0)
-        {
-            Console.WriteLine("S: Simulating a crash");
-            Thread.Sleep(5000);
-        }
-        else if (cycles > 3 && random.Next(0, 10) == 0)
-        {
-            Console.WriteLine("S: Simulating CPU overload");
-            Thread.Sleep(1000);
-        }
-
-        Console.WriteLine("S: Normal request ({0})", request);
-        server.SendFrame(request);
+        Console.WriteLine("S: Simulating a crash");
+        Thread.Sleep(5000);
     }
+    else if (cycles > 3 && random.Next(0, 10) == 0)
+    {
+        Console.WriteLine("S: Simulating CPU overload");
+        Thread.Sleep(1000);
+    }
+
+    Console.WriteLine("S: Normal request ({0})", request);
+    server.SendFrame(request);
 }

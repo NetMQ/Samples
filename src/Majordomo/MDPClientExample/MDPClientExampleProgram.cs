@@ -59,36 +59,34 @@ internal static class MDPClientExampleProgram
         try
         {
             // create MDP client and set verboseness && use automatic disposal
-            using (var session = new MDPClient("tcp://localhost:5555", id))
+            using var session = new MDPClient("tcp://localhost:5555", id);
+            if (verbose)
+                session.LogInfoReady += (s, e) => Console.WriteLine("{0}", e.Info);
+
+            // just give everything time to settle in
+            Thread.Sleep(500);
+
+            watch.Start();
+
+            for (int count = 0; count < runs; count++)
             {
-                if (verbose)
-                    session.LogInfoReady += (s, e) => Console.WriteLine("{0}", e.Info);
+                var request = new NetMQMessage();
+                // set the request data
+                request.Push("Hello World!");
+                // send the request to the service
+                var reply = session.Send(service_name, request);
 
-                // just give everything time to settle in
-                Thread.Sleep(500);
+                if (ReferenceEquals(reply, null))
+                    break;
 
-                watch.Start();
-
-                for (int count = 0; count < runs; count++)
-                {
-                    var request = new NetMQMessage();
-                    // set the request data
-                    request.Push("Hello World!");
-                    // send the request to the service
-                    var reply = session.Send(service_name, request);
-
-                    if (ReferenceEquals(reply, null))
-                        break;
-
-                    if (count % 1000 == 0)
-                        Console.Write("|");
-                    else
-                        if (count % 100 == 0)
-                        Console.Write(".");
-                }
-
-                watch.Stop();
+                if (count % 1000 == 0)
+                    Console.Write("|");
+                else
+                    if (count % 100 == 0)
+                    Console.Write(".");
             }
+
+            watch.Stop();
         }
         catch (Exception ex)
         {
