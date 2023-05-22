@@ -1,32 +1,24 @@
-﻿namespace WeatherUpdateServer;
+﻿Console.Title = "NetMQ Weather Update Server";
 
-internal static class WeatherUpdateServer
+bool stopRequested = false;
+
+// Wire up the CTRL+C handler
+Console.CancelKeyPress += (sender, e) => stopRequested = true;
+
+Console.WriteLine("Publishing weather updates...");
+
+using (var publisher = new PublisherSocket())
 {
-    private static void Main()
+    publisher.Bind("tcp://127.0.0.1:5556");
+
+    var rng = new Random();
+
+    while (!stopRequested)
     {
-        Console.Title = "NetMQ Weather Update Server";
+        int zipcode = rng.Next(0, 99999);
+        int temperature = rng.Next(-80, 135);
+        int relhumidity = rng.Next(0, 90);
 
-        bool stopRequested = false;
-
-        // Wire up the CTRL+C handler
-        Console.CancelKeyPress += (sender, e) => stopRequested = true;
-
-        Console.WriteLine("Publishing weather updates...");
-
-        using (var publisher = new PublisherSocket())
-        {
-            publisher.Bind("tcp://127.0.0.1:5556");
-
-            var rng = new Random();
-
-            while (!stopRequested)
-            {
-                int zipcode = rng.Next(0, 99999);
-                int temperature = rng.Next(-80, 135);
-                int relhumidity = rng.Next(0, 90);
-
-                publisher.SendFrame($"{zipcode} {temperature} {relhumidity}");
-            }
-        }
+        publisher.SendFrame($"{zipcode} {temperature} {relhumidity}");
     }
 }

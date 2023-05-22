@@ -1,107 +1,99 @@
 ﻿using NetMQ.Devices;
 
-namespace MultithreadedService;
+CancellationToken s_token;
 
-internal static class Program
+Console.Title = "NetMQ Multi-threaded Service";
+
+var queue = new QueueDevice("tcp://localhost:5555", "tcp://localhost:5556", DeviceMode.Threaded);
+
+var source = new CancellationTokenSource();
+s_token = source.Token;
+
+for (int threadId = 0; threadId < 10; threadId++)
+    _ = Task.Factory.StartNew(WorkerRoutine, s_token);
+
+queue.Start();
+
+var clientThreads = new List<Task>();
+for (int threadId = 0; threadId < 1000; threadId++)
 {
-    private static CancellationToken s_token;
+    int id = threadId;
+    clientThreads.Add(Task.Factory.StartNew(() => ClientRoutine(id)));
+}
 
-    private static void Main()
+Task.WaitAll(clientThreads.ToArray());
+
+source.Cancel();
+
+queue.Stop();
+
+Console.WriteLine("Press ENTER to exit...");
+Console.ReadLine();
+
+void ClientRoutine(object clientId)
+{
+    try
     {
-        Console.Title = "NetMQ Multi-threaded Service";
-
-        var queue = new QueueDevice("tcp://localhost:5555", "tcp://localhost:5556", DeviceMode.Threaded);
-
-        var source = new CancellationTokenSource();
-        s_token = source.Token;
-
-        for (int threadId = 0; threadId < 10; threadId++)
-            Task.Factory.StartNew(WorkerRoutine, s_token);
-
-        queue.Start();
-
-        var clientThreads = new List<Task>();
-        for (int threadId = 0; threadId < 1000; threadId++)
+        using (var req = new RequestSocket())
         {
-            int id = threadId;
-            clientThreads.Add(Task.Factory.StartNew(() => ClientRoutine(id)));
+            req.Connect("tcp://localhost:5555");
+
+            byte[] message = Encoding.Unicode.GetBytes($"{clientId} Hello");
+
+            Console.WriteLine("Client {0} sent \"{0} Hello\"", clientId);
+            req.SendFrame(message, message.Length);
+
+            var response = req.ReceiveFrameString(Encoding.Unicode);
+            Console.WriteLine("Client {0} received \"{1}\"", clientId, response);
         }
-
-        Task.WaitAll(clientThreads.ToArray());
-
-        source.Cancel();
-
-        queue.Stop();
-
-        Console.WriteLine("Press ENTER to exit...");
-        Console.ReadLine();
     }
-
-    private static void ClientRoutine(object clientId)
+    catch (Exception ex)
     {
-        try
+        Console.WriteLine("Exception on ClientRoutine: {0}", ex.Message);
+    }
+}
+
+void WorkerRoutine()
+{
+    try
+    {
+        using (ResponseSocket rep = new ResponseSocket())
         {
-            using (var req = new RequestSocket())
+            rep.Options.Identity = Encoding.Unicode.GetBytes(Guid.NewGuid().ToString());
+            rep.Connect("tcp://localhost:5556");
+            //rep.Connect("inproc://workers");
+            rep.ReceiveReady += RepOnReceiveReady;
+            while (!s_token.IsCancellationRequested)
             {
-                req.Connect("tcp://localhost:5555");
-
-                byte[] message = Encoding.Unicode.GetBytes($"{clientId} Hello");
-
-                Console.WriteLine("Client {0} sent \"{0} Hello\"", clientId);
-                req.SendFrame(message, message.Length);
-
-                var response = req.ReceiveFrameString(Encoding.Unicode);
-                Console.WriteLine("Client {0} received \"{1}\"", clientId, response);
+                rep.Poll(TimeSpan.FromMilliseconds(100));
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Exception on ClientRoutine: {0}", ex.Message);
-        }
     }
-
-    private static void WorkerRoutine()
+    catch (Exception ex)
     {
-        try
-        {
-            using (ResponseSocket rep = new ResponseSocket())
-            {
-                rep.Options.Identity = Encoding.Unicode.GetBytes(Guid.NewGuid().ToString());
-                rep.Connect("tcp://localhost:5556");
-                //rep.Connect("inproc://workers");
-                rep.ReceiveReady += RepOnReceiveReady;
-                while (!s_token.IsCancellationRequested)
-                {
-                    rep.Poll(TimeSpan.FromMilliseconds(100));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Exception on WorkerRoutine: {0}", ex.Message);
-            throw;
-        }
+        Console.WriteLine("Exception on WorkerRoutine: {0}", ex.Message);
+        throw;
     }
+}
 
-    private static void RepOnReceiveReady(object sender, NetMQSocketEventArgs args)
+void RepOnReceiveReady(object sender, NetMQSocketEventArgs args)
+{
+    try
     {
-        try
-        {
-            NetMQSocket rep = args.Socket;
+        NetMQSocket rep = args.Socket;
 
-            byte[] message = rep.ReceiveFrameBytes();
+        byte[] message = rep.ReceiveFrameBytes();
 
-            //Thread.Sleep(1000); //  Simulate 'work'
+        //Thread.Sleep(1000); //  Simulate 'work'
 
-            byte[] response =
-                Encoding.Unicode.GetBytes(Encoding.Unicode.GetString(message) + " World from worker " + Encoding.Unicode.GetString(rep.Options.Identity));
+        byte[] response =
+            Encoding.Unicode.GetBytes(Encoding.Unicode.GetString(message) + " World from worker " + Encoding.Unicode.GetString(rep.Options.Identity));
 
-            rep.TrySendFrame(response, response.Length);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Exception on RepOnReceiveReady: {0}", ex.Message);
-            throw;
-        }
+        rep.TrySendFrame(response, response.Length);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Exception on RepOnReceiveReady: {0}", ex.Message);
+        throw;
     }
 }

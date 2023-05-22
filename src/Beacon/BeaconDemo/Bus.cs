@@ -27,10 +27,8 @@ internal class Bus
 
         public string Name { get; }
         public int Port { get; }
-
         public string Address { get; }
-
-        public string HostName { get; private set; }
+        public string HostName { get;}
 
         protected bool Equals(NodeKey other)
         {

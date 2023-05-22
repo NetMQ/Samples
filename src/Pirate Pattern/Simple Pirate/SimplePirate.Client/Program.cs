@@ -1,97 +1,90 @@
-﻿namespace SimplePirate.Client;
+﻿const int RequestTimeout = 2500;
+const int RequestRetries = 10;
+const string ServerEndpoint = "tcp://localhost:5555";
 
-internal static class Program
+string strSequenceSent = "";
+bool expectReply = true;
+int retriesLeft = 0;
+
+retriesLeft = RequestRetries;
+
+var client = CreateServerSocket();
+
+int sequence = 0;
+
+while (retriesLeft > 0)
 {
-    private const int RequestTimeout = 2500;
-    private const int RequestRetries = 10;
-    private const string ServerEndpoint = "tcp://localhost:5555";
+    sequence++;
+    strSequenceSent = sequence.ToString() + " HELLO";
+    Console.WriteLine("C: Sending ({0})", strSequenceSent);
+    client.SendFrame(Encoding.Unicode.GetBytes(strSequenceSent));
+    expectReply = true;
 
-    private static string _strSequenceSent = "";
-    private static bool _expectReply = true;
-    private static int _retriesLeft = 0;
-
-    private static void Main()
+    while (expectReply)
     {
-        _retriesLeft = RequestRetries;
+        bool result = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
 
-        var client = CreateServerSocket();
-
-        int sequence = 0;
-
-        while (_retriesLeft > 0)
+        if (!result)
         {
-            sequence++;
-            _strSequenceSent = sequence.ToString() + " HELLO";
-            Console.WriteLine("C: Sending ({0})", _strSequenceSent);
-            client.SendFrame(Encoding.Unicode.GetBytes(_strSequenceSent));
-            _expectReply = true;
+            retriesLeft--;
 
-            while (_expectReply)
+            if (retriesLeft == 0)
             {
-                bool result = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
+                Console.WriteLine("C: Server seems to be offline, abandoning");
+                break;
+            }
+            else
+            {
+                Console.WriteLine("C: No response from server, retrying..");
 
-                if (!result)
-                {
-                    _retriesLeft--;
+                TerminateClient(client);
 
-                    if (_retriesLeft == 0)
-                    {
-                        Console.WriteLine("C: Server seems to be offline, abandoning");
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("C: No response from server, retrying..");
-
-                        TerminateClient(client);
-
-                        client = CreateServerSocket();
-                        client.SendFrame(Encoding.Unicode.GetBytes(_strSequenceSent));
-                    }
-                }
+                client = CreateServerSocket();
+                client.SendFrame(Encoding.Unicode.GetBytes(strSequenceSent));
             }
         }
-        TerminateClient(client);
     }
+}
 
-    private static void TerminateClient(RequestSocket client)
+TerminateClient(client);
+
+void TerminateClient(RequestSocket client)
+{
+    client.Disconnect(ServerEndpoint);
+    client.Close();
+}
+
+RequestSocket CreateServerSocket()
+{
+    Console.WriteLine("C: Connecting to server...");
+
+    var guid = Guid.NewGuid();
+    var client = new RequestSocket
     {
-        client.Disconnect(ServerEndpoint);
-        client.Close();
-    }
-
-    private static RequestSocket CreateServerSocket()
-    {
-        Console.WriteLine("C: Connecting to server...");
-
-        var guid = Guid.NewGuid();
-        var client = new RequestSocket
+        Options =
         {
-            Options =
-            {
-                Linger = TimeSpan.Zero,
-                Identity = Encoding.Unicode.GetBytes(guid.ToString())
-            }
-        };
-        client.Connect(ServerEndpoint);
-        client.ReceiveReady += ClientOnReceiveReady;
-
-        return client;
-    }
-
-    private static void ClientOnReceiveReady(object sender, NetMQSocketEventArgs socket)
-    {
-        var reply = socket.Socket.ReceiveFrameBytes();
-
-        if (Encoding.Unicode.GetString(reply) == (_strSequenceSent + " WORLD!"))
-        {
-            Console.WriteLine("C: Server replied OK ({0})", Encoding.Unicode.GetString(reply));
-            _retriesLeft = RequestRetries;
-            _expectReply = false;
+            Linger = TimeSpan.Zero,
+            Identity = Encoding.Unicode.GetBytes(guid.ToString())
         }
-        else
-        {
-            Console.WriteLine("C: Malformed reply from server: {0}", Encoding.Unicode.GetString(reply));
-        }
+    };
+    client.Connect(ServerEndpoint);
+    client.ReceiveReady += ClientOnReceiveReady;
+
+    return client;
+}
+
+void ClientOnReceiveReady(object sender, NetMQSocketEventArgs socket)
+{
+    var reply = socket.Socket.ReceiveFrameBytes();
+
+    if (Encoding.Unicode.GetString(reply) == (strSequenceSent + " WORLD!"))
+    {
+        Console.WriteLine("C: Server replied OK ({0})", Encoding.Unicode.GetString(reply));
+        retriesLeft = RequestRetries;
+        expectReply = false;
+    }
+    else
+    {
+        Console.WriteLine("C: Malformed reply from server: {0}", Encoding.Unicode.GetString(reply));
     }
 }

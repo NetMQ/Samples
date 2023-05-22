@@ -1,47 +1,37 @@
-﻿using System.Globalization;
+﻿Console.Title = "NetMQ Weather Update Client";
 
-namespace WeatherUpdateClient;
+const int zipToSubscribeTo = 10001;
+const int iterations = 100;
 
-internal static class WeatherUpdateClient
+int totalTemp = 0;
+int totalHumidity = 0;
+
+Console.WriteLine("Collecting updates for weather service for zipcode {0}...", zipToSubscribeTo);
+
+using (var subscriber = new SubscriberSocket())
 {
-    private static void Main()
+    subscriber.Connect("tcp://127.0.0.1:5556");
+    subscriber.Subscribe(zipToSubscribeTo.ToString(CultureInfo.InvariantCulture));
+
+    for (int i = 0; i < iterations; i++)
     {
-        Console.Title = "NetMQ Weather Update Client";
+        string results = subscriber.ReceiveFrameString();
+        Console.Write(".");
 
-        const int zipToSubscribeTo = 10001;
-        const int iterations = 100;
+        // "zip temp relh" ... "10001 84 23" -> ["10001", "84", "23"]
+        string[] split = results.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-        int totalTemp = 0;
-        int totalHumidity = 0;
-
-        Console.WriteLine("Collecting updates for weather service for zipcode {0}...", zipToSubscribeTo);
-
-        using (var subscriber = new SubscriberSocket())
+        int zip = int.Parse(split[0]);
+        if (zip != zipToSubscribeTo)
         {
-            subscriber.Connect("tcp://127.0.0.1:5556");
-            subscriber.Subscribe(zipToSubscribeTo.ToString(CultureInfo.InvariantCulture));
-
-            for (int i = 0; i < iterations; i++)
-            {
-                string results = subscriber.ReceiveFrameString();
-                Console.Write(".");
-
-                // "zip temp relh" ... "10001 84 23" -> ["10001", "84", "23"]
-                string[] split = results.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                int zip = int.Parse(split[0]);
-                if (zip != zipToSubscribeTo)
-                {
-                    throw new Exception($"Received message for unexpected zipcode: {zip} (expected {zipToSubscribeTo})");
-                }
-
-                totalTemp += int.Parse(split[1]);
-                totalHumidity += int.Parse(split[2]);
-            }
+            throw new Exception($"Received message for unexpected zipcode: {zip} (expected {zipToSubscribeTo})");
         }
 
-        Console.WriteLine();
-        Console.WriteLine("Average temperature was: {0}", totalTemp/iterations);
-        Console.WriteLine("Average relative humidity was: {0}", totalHumidity/iterations);
+        totalTemp += int.Parse(split[1]);
+        totalHumidity += int.Parse(split[2]);
     }
 }
+
+Console.WriteLine();
+Console.WriteLine("Average temperature was: {0}", totalTemp/iterations);
+Console.WriteLine("Average relative humidity was: {0}", totalHumidity/iterations);

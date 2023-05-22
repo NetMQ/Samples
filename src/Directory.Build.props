@@ -10,6 +10,7 @@
     <Using Include="NetMQ.Sockets" />
     <Using Include="System" />
     <Using Include="System.Collections.Generic" />
+    <Using Include="System.Globalization" />
     <Using Include="System.Linq" />
     <Using Include="System.Net" />
     <Using Include="System.Text" />
