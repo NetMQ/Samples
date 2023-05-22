@@ -13,8 +13,7 @@ if (!string.IsNullOrEmpty(address))
 
     while (true)
     {
-        bool hasMore;
-        string msg = response.ReceiveFrameString(out hasMore);
+        string msg = response.ReceiveFrameString(out bool hasMore);
         if (string.IsNullOrEmpty(msg))
         {
             Console.WriteLine("No msg received.");

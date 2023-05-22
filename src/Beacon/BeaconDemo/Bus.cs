@@ -179,8 +179,7 @@ internal class Bus
         // we got another beacon
         // let's check if we already know about the beacon
         var message = m_beacon.Receive();
-        int port;
-        int.TryParse(message.String, out port);
+        int.TryParse(message.String, out int port);
 
         NodeKey node = new NodeKey(message.PeerHost, port);
 

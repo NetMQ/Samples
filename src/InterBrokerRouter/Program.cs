@@ -162,8 +162,7 @@ internal static class Program
 
             Debug.Assert(string.IsNullOrWhiteSpace(capacity), "StateFrontend: message was empty!");
 
-            int couldCapacity;
-            Debug.Assert(int.TryParse(capacity, out couldCapacity), "StateFrontend: message did not contain a number!");
+            Debug.Assert(int.TryParse(capacity, out int couldCapacity), "StateFrontend: message did not contain a number!");
         };
 
         // get the status message and print it

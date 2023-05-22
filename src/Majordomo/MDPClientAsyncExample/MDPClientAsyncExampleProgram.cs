@@ -114,8 +114,7 @@ internal static class MDPClientAsyncExampleProgram
     {
         var num = s.Remove(0, 2);
 
-        int runs;
-        var success = int.TryParse(num, out runs);
+        var success = int.TryParse(num, out int runs);
 
         return success ? runs : -1;
     }

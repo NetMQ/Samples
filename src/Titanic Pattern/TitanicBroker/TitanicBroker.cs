@@ -154,8 +154,7 @@ public class TitanicBroker : ITitanicBroker
                 // only one frame will be send [Guid]
                 var msg = pipeStart.ReceiveFrameString();
 
-                Guid guid;
-                if (!Guid.TryParse(msg, out guid))
+                if (!Guid.TryParse(msg, out Guid guid))
                     Log("[TITANIC BROKER] Received a malformed GUID via pipe - throw it away");
                 else
                 {
