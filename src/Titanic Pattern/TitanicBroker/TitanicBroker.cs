@@ -208,7 +208,7 @@ public class TitanicBroker : ITitanicBroker
             Log($"[TITANIC REQUEST] Received request: {request}");
 
             //! has there been a breaking cause? -> exit
-            if (ReferenceEquals(request, null))
+            if (request is null)
                 break;
 
             //! check if service exists! and return 'Unknown' if not
@@ -254,7 +254,7 @@ public class TitanicBroker : ITitanicBroker
             Log($"TITANIC REPLY] received: {request}");
 
             //! has there been a breaking cause? -> exit
-            if (ReferenceEquals(request, null))
+            if (request is null)
                 break;
 
             var requestIdAsString = request.Pop().ConvertToString();
@@ -301,7 +301,7 @@ public class TitanicBroker : ITitanicBroker
             Log($"[TITANIC CLOSE] received: {request}");
 
             //! has there been a breaking cause? -> exit
-            if (ReferenceEquals(request, null))
+            if (request is null)
                 break;
 
             // we expect [Guid] as the only frame
@@ -346,7 +346,7 @@ public class TitanicBroker : ITitanicBroker
 
         var reply = ServiceCall (serviceName, request, serviceClient);
 
-        if (ReferenceEquals (reply, null))
+        if (reply is null)
             return false;       // no reply
 
         // a reply has been received -> save it

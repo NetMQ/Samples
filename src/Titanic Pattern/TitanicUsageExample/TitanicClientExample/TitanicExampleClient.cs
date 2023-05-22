@@ -60,7 +60,7 @@ internal class TitanicExampleClient
                 if (data != "Hallo World")
                     Console.WriteLine ("\t[TitanicClient] Hallo World != {0} on loop #{1} with status {2}", data, i, reply.Item2);
 
-                if (!ReferenceEquals (reply.Item1, null) && reply.Item2 == TitanicReturnCode.Ok)
+                if (reply.Item1 is not null && reply.Item2 == TitanicReturnCode.Ok)
                     Console.WriteLine ("\t[TitanicClient] Status = {0} - Reply = {1}", reply.Item2, data);
             }
         }

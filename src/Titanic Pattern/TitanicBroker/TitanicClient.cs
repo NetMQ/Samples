@@ -401,7 +401,7 @@ public class TitanicClient : ITitanicClient
 
         Log ($"received message: {reply}");
 
-        if (ReferenceEquals (reply, null) || reply.IsEmpty)
+        if (reply is null || reply.IsEmpty)
             return null; // went wrong - why? I don't care!
 
         // we got a reply -> [return code][data]

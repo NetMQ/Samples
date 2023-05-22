@@ -117,7 +117,7 @@ public class MDPClientAsync : IMDPClientAsync
         if (string.IsNullOrWhiteSpace(serviceName))
             throw new ApplicationException("serviceName must not be empty or null.");
 
-        if (ReferenceEquals(request, null))
+        if (request is null)
             throw new ApplicationException("the request must not be null");
 
         // memorize it for the event handler
@@ -163,11 +163,11 @@ public class MDPClientAsync : IMDPClientAsync
             return;
 
         // m_poller might not have been created yet!
-        if (!ReferenceEquals(m_poller, null))
+        if (m_poller is not null)
             m_poller.Dispose();
 
         // m_client might not have been created yet!
-        if (!ReferenceEquals(m_client, null))
+        if (m_client is not null)
             m_client.Dispose();
     }
 
@@ -178,7 +178,7 @@ public class MDPClientAsync : IMDPClientAsync
     /// </summary>
     private void Connect()
     {
-        if (!ReferenceEquals(m_client, null))
+        if (m_client is not null)
         {
             m_poller.Remove(m_client);
             m_client.Dispose();
@@ -224,7 +224,7 @@ public class MDPClientAsync : IMDPClientAsync
         try
         {
             reply = m_client.ReceiveMultipartMessage();
-            if (ReferenceEquals(reply, null))
+            if (reply is null)
                 throw new ApplicationException("Unexpected behavior");
 
             m_timer.EnableAndReset(); // reset timeout timer because a message was received

@@ -546,7 +546,7 @@ public class MDPBroker : IMDPBroker
         var msg = message ?? new NetMQMessage();
 
         // stack protocol envelope to start of message
-        if (!ReferenceEquals(option, null))
+        if (option is not null)
             msg.Push(option);
 
         msg.Push(new[] { (byte)command });
@@ -591,7 +591,7 @@ public class MDPBroker : IMDPBroker
         DebugLog($"Service [{service.Name}] dispatches -> {(message == null ? "PURGING" : "message = " + message)}");
 
         // if message is 'null' just send pending requests
-        if (!ReferenceEquals(message, null))
+        if (message is not null)
             service.AddRequest(message);
 
         // remove all expired workers!

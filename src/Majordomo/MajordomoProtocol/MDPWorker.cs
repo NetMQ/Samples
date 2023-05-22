@@ -113,9 +113,9 @@ public class MDPWorker : IMDPWorker
         // REQ and must skip the REPLY step
         // if however the Connect has not been called than we have received
         // and processed a REQ and must send a REP and at one must be pending
-        if (!ReferenceEquals(reply, null) && m_expectReply != 0)
+        if (reply is not null && m_expectReply != 0)
         {
-            if (ReferenceEquals(m_returnIdentity, null) || m_returnIdentity.BufferSize == 0)
+            if (m_returnIdentity is null || m_returnIdentity.BufferSize == 0)
                 throw new ApplicationException("A malformed reply has been provided");
 
             var message = Wrap(reply, m_returnIdentity);       // [client id][e][reply]
@@ -133,7 +133,7 @@ public class MDPWorker : IMDPWorker
                 // a request has been received, so connection is established - reset the connection retries
                 m_retriesLeft = m_connectionRetries;
                 // ProcessReceiveReady will set m_request only if a request arrived
-                if (!ReferenceEquals(m_request, null))
+                if (m_request is not null)
                     return m_request;
             }
             else
@@ -281,7 +281,7 @@ public class MDPWorker : IMDPWorker
     private void Connect()
     {
         // if the socket exists dispose it and re-create one
-        if (!ReferenceEquals(m_worker, null))
+        if (m_worker is not null)
         {
             m_worker.Unbind(m_brokerAddress);
             m_worker.Dispose();
@@ -322,10 +322,10 @@ public class MDPWorker : IMDPWorker
         // cmd, null, message      -> [REPLY],<null>,[client adr][e][reply]
         // cmd, string, null       -> [READY],[service name]
         // cmd, null, null         -> [HEARTBEAT]
-        var msg = ReferenceEquals(message, null) ? new NetMQMessage() : message;
+        var msg = message is null ? new NetMQMessage() : message;
         // protocol envelope according to MDP
         // last frame is the data if available
-        if (!ReferenceEquals(data, null))
+        if (data is not null)
         {
             // data could be multiple whitespaces or even empty(!)
             msg.Push(data);
@@ -390,7 +390,7 @@ public class MDPWorker : IMDPWorker
         if (!disposing)
             return;
 
-        if (!ReferenceEquals(m_worker, null))
+        if (m_worker is not null)
             m_worker.Dispose();
     }
 }

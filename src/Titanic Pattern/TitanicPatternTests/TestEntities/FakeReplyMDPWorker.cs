@@ -28,7 +28,7 @@ public class FakeReplyMDPWorker : IMDPWorker
         //      c) [Unknown]
         Reply = reply;
 
-        if (ReferenceEquals (reply, null))
+        if (reply is null)
         {
             // this is the initiation call
             // so return the request to make when allowed

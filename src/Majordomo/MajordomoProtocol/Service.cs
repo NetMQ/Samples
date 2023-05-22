@@ -130,7 +130,7 @@ internal class Service
         // get one or null
         var request = m_pendingRequests.Count > 0 ? m_pendingRequests[0] : null;
         // remove from pending requests if it exists
-        if (!ReferenceEquals (request, null))
+        if (request is not null)
             m_pendingRequests.Remove (request);
 
         return request;
@@ -148,12 +148,12 @@ internal class Service
 
     public override bool Equals (object obj)
     {
-        if (ReferenceEquals (obj, null))
+        if (obj is null)
             return false;
 
         var other = obj as Service;
 
-        return !ReferenceEquals (other, null) && Name == other.Name;
+        return other is not null && Name == other.Name;
     }
 
     private bool IsKnown (string workerName) { return m_workers.Exists (w => w.Id == workerName); }

@@ -110,7 +110,7 @@ public class MDPClient : IMDPClient
         if (string.IsNullOrWhiteSpace(serviceName))
             throw new ApplicationException("serviceName must not be empty or null.");
 
-        if (ReferenceEquals(request, null))
+        if (request is null)
             throw new ApplicationException("the request must not be null");
         // memorize it for the event handler
         m_serviceName = serviceName;
@@ -171,7 +171,7 @@ public class MDPClient : IMDPClient
     /// <exception cref="ApplicationException">if broker address is empty or <c>null</c></exception>
     private void Connect()
     {
-        if (!ReferenceEquals(m_client, null))
+        if (m_client is not null)
             m_client.Dispose();
 
         m_client = new RequestSocket();
@@ -248,7 +248,7 @@ public class MDPClient : IMDPClient
             return;
 
         // m_client might not have been created yet!
-        if (!ReferenceEquals(m_client, null))
+        if (m_client is not null)
             m_client.Dispose();
     }
 }

@@ -21,7 +21,7 @@ public class FakeCloseMDPWorker : IMDPWorker
 
     public NetMQMessage Receive (NetMQMessage reply)
     {
-        if (ReferenceEquals (reply, null))
+        if (reply is null)
         {
             // upon the first call this is 'null'
             waitHandle.WaitOne ();

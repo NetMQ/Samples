@@ -22,7 +22,7 @@ public class FakeRequestMDPWorker : IMDPWorker
     public NetMQMessage Receive (NetMQMessage reply)
     {
         // upon the first call this is 'null'
-        if (ReferenceEquals (reply, null))
+        if (reply is null)
             return Request;     // [service][request]
 
         // on the second call it should be [Ok][Guid]

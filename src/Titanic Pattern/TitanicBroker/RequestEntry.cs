@@ -69,12 +69,12 @@ public class RequestEntry : IEquatable<RequestEntry>
 
     public override bool Equals (object obj)
     {
-        return !ReferenceEquals (obj, null) && Equals (obj as RequestEntry);
+        return obj is not null && Equals (obj as RequestEntry);
     }
 
     public bool Equals (RequestEntry other)
     {
-        if (ReferenceEquals (other, null))
+        if (other is null)
             return false;
 
         return RequestId == other.RequestId && State == other.State;
@@ -85,7 +85,7 @@ public class RequestEntry : IEquatable<RequestEntry>
         if (ReferenceEquals (one, other))
             return true;
 
-        return !ReferenceEquals (one, null) && one.Equals (other);
+        return one is not null && one.Equals (other);
     }
 
     public static bool operator != (RequestEntry one, RequestEntry other)

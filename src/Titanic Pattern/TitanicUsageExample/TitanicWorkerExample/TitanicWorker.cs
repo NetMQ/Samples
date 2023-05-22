@@ -42,7 +42,7 @@ internal class TitanicWorker
                     Console.WriteLine("[TITANIC WORKER] Received: {0}", request);
 
                 // was the worker interrupted
-                if (ReferenceEquals(request, null))
+                if (request is null)
                     break;
                 // echo the request
                 reply = request;

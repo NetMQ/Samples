@@ -76,7 +76,7 @@ internal static class MDPClientExampleProgram
                 // send the request to the service
                 var reply = session.Send(service_name, request);
 
-                if (ReferenceEquals(reply, null))
+                if (reply is null)
                     break;
 
                 if (count % 1000 == 0)
