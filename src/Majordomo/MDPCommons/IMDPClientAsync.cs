@@ -1,7 +1,4 @@
-﻿using System;
-using NetMQ;
-
-namespace MDPCommons
+﻿namespace MDPCommons
 {
     public interface IMDPClientAsync : IDisposable
     {

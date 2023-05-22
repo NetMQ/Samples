@@ -1,7 +1,4 @@
-﻿using System;
-using NetMQ;
-
-namespace TitanicProtocol
+﻿namespace TitanicProtocol
 {
     /// <summary>
     ///     represents an entry of a request made

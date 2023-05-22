@@ -1,5 +1,4 @@
-﻿using System;
-using MDPCommons;
+﻿using MDPCommons;
 
 namespace TitanicCommons
 {

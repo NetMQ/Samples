@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using NetMQ;
-using NetMQ.Sockets;
-using ParanoidPirate.Queue;
+﻿using ParanoidPirate.Queue;
 
 namespace ParanoidPirate.Client
 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-using MajordomoProtocol;
-using NetMQ;
+﻿using MajordomoProtocol;
 
 namespace MDPServiceDiscoveryClientExample
 {

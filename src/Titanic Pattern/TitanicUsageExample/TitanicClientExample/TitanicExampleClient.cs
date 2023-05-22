@@ -1,8 +1,5 @@
-﻿using System;
-using System.Text;
-using System.Threading;
+﻿using TitanicCommons;
 
-using TitanicCommons;
 using TitanicProtocol;
 
 namespace TitanicClientExample

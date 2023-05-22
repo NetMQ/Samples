@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace SimplePirate.Client
+﻿namespace SimplePirate.Client
 {
     internal static class Program
     {

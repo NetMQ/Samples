@@ -1,7 +1,4 @@
-﻿using NetMQ;
-using System;
-
-namespace MDPCommons
+﻿namespace MDPCommons
 {
     public class MDPReplyEventArgs : EventArgs
     {

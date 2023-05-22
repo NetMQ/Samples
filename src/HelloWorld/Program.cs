@@ -1,8 +1,4 @@
-﻿using System;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace HelloWorld
+﻿namespace HelloWorld
 {
     internal static class Program
     {

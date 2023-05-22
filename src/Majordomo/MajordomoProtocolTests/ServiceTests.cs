@@ -1,6 +1,5 @@
-﻿using System.Linq;
-using MajordomoProtocol;
-using NetMQ;
+﻿using MajordomoProtocol;
+
 using NUnit.Framework;
 
 namespace MajordomoTests

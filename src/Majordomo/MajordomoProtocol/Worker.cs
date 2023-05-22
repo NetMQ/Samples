@@ -1,6 +1,3 @@
-using System;
-using NetMQ;
-
 namespace MajordomoProtocol
 {
     /// <summary>

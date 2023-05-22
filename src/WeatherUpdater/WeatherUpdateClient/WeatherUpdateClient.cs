@@ -1,7 +1,4 @@
-﻿using System;
-using System.Globalization;
-using NetMQ;
-using NetMQ.Sockets;
+﻿using System.Globalization;
 
 namespace WeatherUpdateClient
 {

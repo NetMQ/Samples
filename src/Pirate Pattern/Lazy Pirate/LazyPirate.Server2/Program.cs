@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace LazyPirate.Server2
+﻿namespace LazyPirate.Server2
 {
     internal static class Program
     {

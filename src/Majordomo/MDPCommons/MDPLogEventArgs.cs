@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MDPCommons
+﻿namespace MDPCommons
 {
     public class MDPLogEventArgs : EventArgs
     {

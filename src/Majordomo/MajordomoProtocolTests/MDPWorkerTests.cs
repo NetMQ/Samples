@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using MajordomoProtocol;
 
-using MajordomoProtocol;
 using MDPCommons;
 
-using NetMQ;
-using NetMQ.Sockets;
 using NUnit.Framework;
 
 namespace MajordomoTests

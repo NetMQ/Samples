@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-using NetMQ;
-using NetMQ.Sockets;
-using ParanoidPirate.Queue;
+﻿using ParanoidPirate.Queue;
 
 namespace ParanoidPirate.Worker
 {

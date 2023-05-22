@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-
-using MDPCommons;
-using NetMQ;
+﻿using MDPCommons;
 
 namespace TitanicProtocolTests.TestEntities
 {

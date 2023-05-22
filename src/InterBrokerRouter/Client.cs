@@ -1,10 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace InterBrokerRouter
+﻿namespace InterBrokerRouter
 {
     public class Client
     {

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using TitanicCommons;
+﻿using TitanicCommons;
 
 namespace TitanicProtocolTests.TestEntities
 {

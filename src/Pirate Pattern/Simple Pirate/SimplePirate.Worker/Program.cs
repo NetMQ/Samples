@@ -1,10 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace SimplePirate.Worker
+﻿namespace SimplePirate.Worker
 {
     internal static class Program
     {

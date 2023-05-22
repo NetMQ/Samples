@@ -1,16 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 using FluentAssertions;
+
 using NUnit.Framework;
 
-using NetMQ;
-
 using TitanicCommons;
+
 using TitanicProtocol;
+
 using TitanicProtocolTests.TestEntities;
 
 namespace TitanicProtocolTests

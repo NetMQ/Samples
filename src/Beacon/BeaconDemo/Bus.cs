@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace BeaconDemo
+﻿namespace BeaconDemo
 {
     /// <summary>
     /// Originally from the Docs\beacon.md documentation with small modifications for this demo

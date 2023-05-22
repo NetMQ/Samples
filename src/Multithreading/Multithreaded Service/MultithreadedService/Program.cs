@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using NetMQ;
-using NetMQ.Devices;
-using NetMQ.Sockets;
+﻿using NetMQ.Devices;
 
 namespace MultithreadedService
 {

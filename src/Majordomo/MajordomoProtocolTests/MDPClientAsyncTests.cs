@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using MajordomoProtocol;
-using NetMQ;
-using NetMQ.Sockets;
+﻿using MajordomoProtocol;
+
 using NUnit.Framework;
-using System.Threading.Tasks;
 
 namespace MajordomoTests
 {

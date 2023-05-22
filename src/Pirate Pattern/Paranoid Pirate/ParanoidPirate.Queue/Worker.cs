@@ -1,7 +1,4 @@
-﻿using System;
-using NetMQ;
-
-namespace ParanoidPirate.Queue
+﻿namespace ParanoidPirate.Queue
 {
     public class Worker : IDisposable
     {

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Diagnostics;
+
 using MajordomoProtocol;
-using NetMQ;
 
 namespace MDPClientExample
 {

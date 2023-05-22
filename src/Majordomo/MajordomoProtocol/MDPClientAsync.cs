@@ -1,12 +1,5 @@
-﻿using System;
-using System.Text;
-
-using NetMQ;
-
-using MDPCommons;
-using NetMQ.Sockets;
+﻿using MDPCommons;
 using JetBrains.Annotations;
-using System.Collections.Generic;
 
 namespace MajordomoProtocol
 {

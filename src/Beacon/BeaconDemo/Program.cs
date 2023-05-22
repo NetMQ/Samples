@@ -1,8 +1,4 @@
-﻿using NetMQ;
-using System;
-using System.Threading;
-
-namespace BeaconDemo
+﻿namespace BeaconDemo
 {
     /// <summary>
     /// Originally from http://netmq.readthedocs.org/en/latest/beacon/

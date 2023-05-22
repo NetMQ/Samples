@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace SimplePirate.Queue
+﻿namespace SimplePirate.Queue
 {
     internal static class Program
     {

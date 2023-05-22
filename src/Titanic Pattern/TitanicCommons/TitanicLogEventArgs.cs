@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TitanicCommons
+﻿namespace TitanicCommons
 {
     public class TitanicLogEventArgs : EventArgs
     {

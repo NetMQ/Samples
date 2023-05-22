@@ -1,9 +1,4 @@
-﻿using System;
-using System.Text;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace LazyPirate.Client
+﻿namespace LazyPirate.Client
 {
     /// <summary>
     /// Run both LazyPirate.Server and LazyPirate.Client simultaneously to see the demonstration of this pattern.

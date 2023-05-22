@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-
-namespace TitanicCommons
+﻿namespace TitanicCommons
 {
     public interface ITitanicClient : IDisposable
     {

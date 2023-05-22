@@ -1,6 +1,4 @@
-﻿using System;
-using MajordomoProtocol;
-using NetMQ;
+﻿using MajordomoProtocol;
 
 namespace TitanicWorkerExample
 {

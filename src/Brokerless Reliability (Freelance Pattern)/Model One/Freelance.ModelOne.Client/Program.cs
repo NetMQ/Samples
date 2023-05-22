@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NetMQ;
-using NetMQ.Sockets;
-
-namespace Freelance.ModelOne.Client
+﻿namespace Freelance.ModelOne.Client
 {
     internal static class Program
     {

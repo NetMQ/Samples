@@ -1,13 +1,9 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-
-using JetBrains.Annotations;
-
-using NetMQ;
+﻿using JetBrains.Annotations;
 
 using MajordomoProtocol;
+
 using MDPCommons;
+
 using TitanicCommons;
 
 namespace TitanicProtocol

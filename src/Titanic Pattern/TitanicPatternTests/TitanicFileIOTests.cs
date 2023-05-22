@@ -1,11 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 using FluentAssertions;
-using NUnit.Framework;
 
-using NetMQ;
+using NUnit.Framework;
 
 using TitanicProtocol;
 

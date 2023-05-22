@@ -1,7 +1,4 @@
-﻿using System;
-using NetMQ;
-
-namespace MDPCommons
+﻿namespace MDPCommons
 {
     // define the possible message types for the worker MDP
 

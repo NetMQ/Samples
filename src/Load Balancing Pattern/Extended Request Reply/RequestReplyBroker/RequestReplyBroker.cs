@@ -1,7 +1,4 @@
-﻿using NetMQ;
-using NetMQ.Sockets;
-
-namespace ExtendedRequestReply
+﻿namespace ExtendedRequestReply
 {
     internal static class RequestReplyBroker
     {

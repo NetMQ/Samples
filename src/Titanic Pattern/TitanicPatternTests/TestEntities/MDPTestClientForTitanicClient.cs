@@ -1,9 +1,9 @@
-﻿using System;
-using System.Text;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+
 using MDPCommons;
-using NetMQ;
+
 using TitanicCommons;
+
 using TitanicProtocol;
 
 namespace TitanicProtocolTests.TestEntities
