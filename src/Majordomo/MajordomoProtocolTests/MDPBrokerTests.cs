@@ -68,7 +68,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ReceiveREADYMessageFromWorker_LogSuccessfulRegistration ()
+    public async Task Run_ReceiveREADYMessageFromWorker_LogSuccessfulRegistration ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -118,7 +118,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ReceiveREADYMessageFromThreeWorkersSameServices_LogSuccessfulRegistration ()
+    public async Task Run_ReceiveREADYMessageFromThreeWorkersSameServices_LogSuccessfulRegistration ()
     {
         const string endPoint = "tcp://localhost:5556";
         var log = new List<string> ();
@@ -153,7 +153,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ReceiveREADYMessageFromThreeWorkersDifferentServices_LogSuccessfulRegistration ()
+    public async Task Run_ReceiveREADYMessageFromThreeWorkersDifferentServices_LogSuccessfulRegistration ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -188,7 +188,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ReceiveREPLYMessageFromWorker_ShouldLogCorrectReply ()
+    public async Task Run_ReceiveREPLYMessageFromWorker_ShouldLogCorrectReply ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -239,7 +239,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ReceiveREPLYMessageFromThreeDifferentWorker_ShouldLogAndReturnCorrectReplies ()
+    public async Task Run_ReceiveREPLYMessageFromThreeDifferentWorker_ShouldLogAndReturnCorrectReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -309,7 +309,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsWithSingleWorker_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsWithSingleWorker_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -343,7 +343,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsWithMultipleWorker_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsWithMultipleWorker_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -380,7 +380,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsWithMultipleClients_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsWithMultipleClients_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -419,7 +419,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsWithMultipleClientsAndMultipleWorker_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsWithMultipleClientsAndMultipleWorker_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -461,7 +461,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsClientStopsAndReconnectsWithSingleWorker_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsClientStopsAndReconnectsWithSingleWorker_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -495,7 +495,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsClientStopsAndReconnectsWithMultipleWorker_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsClientStopsAndReconnectsWithMultipleWorker_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
@@ -533,7 +533,7 @@ public class MDPBrokerTests
     }
 
     [Test]
-    public async void Run_ProcessMultipleRequestsWorkerStops_ShouldCorrectlyRouteReplies ()
+    public async Task Run_ProcessMultipleRequestsWorkerStops_ShouldCorrectlyRouteReplies ()
     {
         const string endPoint = "tcp://localhost:5555";
         var log = new List<string> ();
