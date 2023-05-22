@@ -4,7 +4,7 @@ namespace ParanoidPirate.Queue;
 
 public class Workers : IEnumerable<Worker>
 {
-    private readonly List<Worker> m_workers = new List<Worker>();
+    private readonly List<Worker> m_workers = new();
 
     /// <summary>
     /// true if there are workers available

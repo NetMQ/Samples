@@ -4,7 +4,7 @@ namespace TitanicProtocolTests.TestEntities;
 
 public class FakeReplyMDPWorker : IMDPWorker
 {
-    public readonly AutoResetEvent waitHandle = new AutoResetEvent (false);
+    public readonly AutoResetEvent waitHandle = new(false);
 
     public NetMQMessage Request { get; set; }
     public NetMQMessage Reply { get; set; }

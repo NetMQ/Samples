@@ -6,7 +6,7 @@ public class FakeDispatchMDPClient : IMDPClient
 {
     private int m_count;
 
-    public readonly AutoResetEvent waitHandle = new AutoResetEvent (false);
+    public readonly AutoResetEvent waitHandle = new(false);
 
     public void Dispose () { return; }
 

@@ -57,7 +57,7 @@ void WorkerRoutine()
 {
     try
     {
-        using ResponseSocket rep = new ResponseSocket();
+        using ResponseSocket rep = new();
         rep.Options.Identity = Encoding.Unicode.GetBytes(Guid.NewGuid().ToString());
         rep.Connect("tcp://localhost:5556");
         //rep.Connect("inproc://workers");

@@ -64,7 +64,7 @@ public class MDPBroker : IMDPBroker
     private bool m_isBound;                                 // true if socket is bound to address
     private bool m_isRunning;                               // true if the broker is running
 
-    private readonly object m_syncRoot = new object();     // used as synchronization object for Purge ()
+    private readonly object m_syncRoot = new();     // used as synchronization object for Purge ()
 
     /// <summary>
     ///     the socket for communicating with clients and workers

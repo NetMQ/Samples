@@ -82,7 +82,7 @@ internal class Bus
     /// </summary>
     public static NetMQActor Create(int broadcastPort)
     {
-        Bus node = new Bus(broadcastPort);
+        Bus node = new(broadcastPort);
         return node.m_actor;
     }
 
@@ -126,7 +126,7 @@ internal class Bus
             m_beacon.ReceiveReady += OnBeaconReady;
 
             // Create a timer to clear dead nodes
-            NetMQTimer timer = new NetMQTimer(TimeSpan.FromSeconds(1));
+            NetMQTimer timer = new(TimeSpan.FromSeconds(1));
             timer.Elapsed += ClearDeadNodes;
 
             // Create and configure the poller with all sockets and the timer
@@ -181,7 +181,7 @@ internal class Bus
         var message = m_beacon.Receive();
         int.TryParse(message.String, out int port);
 
-        NodeKey node = new NodeKey(message.PeerHost, port);
+        NodeKey node = new(message.PeerHost, port);
 
         // check if node already exist
         if (!m_nodes.ContainsKey(node))

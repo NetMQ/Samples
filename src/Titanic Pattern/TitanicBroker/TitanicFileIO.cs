@@ -24,7 +24,7 @@ public class TitanicFileIO : ITitanicIO
     /// <summary>
     ///     acts a synchronization root
     /// </summary>
-    private readonly object m_syncRoot = new object ();
+    private readonly object m_syncRoot = new();
 
     /// <summary>
     ///     the hook for the handling of logging messages published
