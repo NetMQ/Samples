@@ -1,0 +1,36 @@
+<Project>
+
+  <!-- We specify the version of packages here, to avoid repeating that across the solution. -->
+  <ItemGroup>
+    <PackageReference Update="AsyncIO" Version="0.1.69" />
+    <PackageReference Update="JetBrains.Annotations" Version="2022.1.0" />
+    <PackageReference Update="NaCl.Net" Version="0.1.13" />
+    <PackageReference Update="NetMQ" Version="4.0.1.10" />
+    <PackageReference Update="NetMQ.Devices" Version="1.0.0" />
+    <PackageReference Update="System.Buffers" Version="4.5.1" />
+    <PackageReference Update="System.Memory" Version="4.5.5" />
+    <PackageReference Update="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Update="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Update="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Update="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Update="System.IO" Version="4.3.0" />
+    <PackageReference Update="System.Net.Http" Version="4.3.4" />
+    <PackageReference Update="System.Runtime" Version="4.3.1" />
+    <PackageReference Update="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+    <PackageReference Update="System.Security.Cryptography.Encoding" Version="4.3.0" />
+    <PackageReference Update="System.Security.Cryptography.Primitives" Version="4.3.0" />
+    <PackageReference Update="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
+
+    <!-- Unit testing -->
+    <PackageReference Update="NUnit" Version="3.13.3" />
+    <PackageReference Update="NUnit.Console" Version="3.16.3" />
+    <PackageReference Update="NUnit3TestAdapter" Version="4.4.2" />
+    <PackageReference Update="NUnit.Analyzers" Version="3.6.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+    <PackageReference Update="FluentAssertions" Version="6.7.0" />
+  </ItemGroup>
+
+</Project>

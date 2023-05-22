@@ -1,63 +1,63 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32602.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WeatherUpdate", "WeatherUpdate", "{C6CA5118-649F-4389-A36E-70F7600FB99B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld", "HelloWorld", "{5A526E6B-083E-419A-A2BD-A0C807E6FA0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "HelloWorld\HelloWorld.csproj", "{7AB16EE9-4A79-4BFB-8C0B-D1A076E34896}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "HelloWorld\HelloWorld.csproj", "{7AB16EE9-4A79-4BFB-8C0B-D1A076E34896}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherUpdateClient", "WeatherUpdater\WeatherUpdateClient\WeatherUpdateClient.csproj", "{37B320C0-9E44-44EF-B89A-E671DBA4986B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeatherUpdateClient", "WeatherUpdater\WeatherUpdateClient\WeatherUpdateClient.csproj", "{37B320C0-9E44-44EF-B89A-E671DBA4986B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherUpdateServer", "WeatherUpdater\WeatherUpdateServer\WeatherUpdateServer.csproj", "{5B8F7740-EFD5-46B9-8A96-2E1F47385295}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeatherUpdateServer", "WeatherUpdater\WeatherUpdateServer\WeatherUpdateServer.csproj", "{5B8F7740-EFD5-46B9-8A96-2E1F47385295}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Brokerless Reliability (Freelance Pattern)", "Brokerless Reliability (Freelance Pattern)", "{CCC09B86-B0E6-47B4-B05A-8F10F2135F6C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Model One", "Model One", "{CE56606F-1893-48CD-B367-77BCD0D4252F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Freelance.ModelOne.Client", "Brokerless Reliability (Freelance Pattern)\Model One\Freelance.ModelOne.Client\Freelance.ModelOne.Client.csproj", "{0A5BC1E9-BB65-40BC-83CA-7F68D528ECB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freelance.ModelOne.Client", "Brokerless Reliability (Freelance Pattern)\Model One\Freelance.ModelOne.Client\Freelance.ModelOne.Client.csproj", "{0A5BC1E9-BB65-40BC-83CA-7F68D528ECB4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Freelance.ModelOne.Server", "Brokerless Reliability (Freelance Pattern)\Model One\Freelance.ModelOne.Server\Freelance.ModelOne.Server.csproj", "{99E7E475-C96D-45EB-92D3-D25D6E89693A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Freelance.ModelOne.Server", "Brokerless Reliability (Freelance Pattern)\Model One\Freelance.ModelOne.Server\Freelance.ModelOne.Server.csproj", "{99E7E475-C96D-45EB-92D3-D25D6E89693A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Load Balancing Pattern", "Load Balancing Pattern", "{55C902FD-5A18-43E3-A980-8B7E2A01B837}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ROUTERbrokerDEALERworkers", "Load Balancing Pattern\ROUTERbrokerDEALERworkers\ROUTERbrokerDEALERworkers.csproj", "{DE0D8B83-DAB8-4EAF-9336-0A1614165AD8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ROUTERbrokerDEALERworkers", "Load Balancing Pattern\ROUTERbrokerDEALERworkers\ROUTERbrokerDEALERworkers.csproj", "{DE0D8B83-DAB8-4EAF-9336-0A1614165AD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ROUTERbrokerREQworkers", "Load Balancing Pattern\ROUTERbrokerREQworkers\ROUTERbrokerREQworkers.csproj", "{B3402B17-15B1-423D-B031-349ADBAFFC3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ROUTERbrokerREQworkers", "Load Balancing Pattern\ROUTERbrokerREQworkers\ROUTERbrokerREQworkers.csproj", "{B3402B17-15B1-423D-B031-349ADBAFFC3E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pirate Pattern", "Pirate Pattern", "{4DA03FE0-FA2B-4B71-B95C-60BD14359D40}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lazy Pirate", "Lazy Pirate", "{8F3B82AB-A6CE-4685-A846-83209A10A12B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyPirate.Client", "Pirate Pattern\Lazy Pirate\LazyPirate.Client\LazyPirate.Client.csproj", "{717F3F1C-BA8B-4212-AA40-AD0452952793}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LazyPirate.Client", "Pirate Pattern\Lazy Pirate\LazyPirate.Client\LazyPirate.Client.csproj", "{717F3F1C-BA8B-4212-AA40-AD0452952793}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyPirate.Server", "Pirate Pattern\Lazy Pirate\LazyPirate.Server\LazyPirate.Server.csproj", "{859618CC-4269-42F4-95A1-35CC5D682022}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LazyPirate.Server", "Pirate Pattern\Lazy Pirate\LazyPirate.Server\LazyPirate.Server.csproj", "{859618CC-4269-42F4-95A1-35CC5D682022}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Simple Pirate", "Simple Pirate", "{FF804DE7-C99A-477C-9EC4-CCBEC87596AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePirate.Client", "Pirate Pattern\Simple Pirate\SimplePirate.Client\SimplePirate.Client.csproj", "{AF3B21D1-F86D-49D1-BE76-DF17F27EFF3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePirate.Client", "Pirate Pattern\Simple Pirate\SimplePirate.Client\SimplePirate.Client.csproj", "{AF3B21D1-F86D-49D1-BE76-DF17F27EFF3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePirate.Worker", "Pirate Pattern\Simple Pirate\SimplePirate.Worker\SimplePirate.Worker.csproj", "{45B74B50-0E86-45B3-9B49-50D8B4F50212}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePirate.Worker", "Pirate Pattern\Simple Pirate\SimplePirate.Worker\SimplePirate.Worker.csproj", "{45B74B50-0E86-45B3-9B49-50D8B4F50212}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePirate.Queue", "Pirate Pattern\Simple Pirate\SimplePirate.Queue\SimplePirate.Queue.csproj", "{72A7CABE-F118-4C05-8887-D7174EB10018}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePirate.Queue", "Pirate Pattern\Simple Pirate\SimplePirate.Queue\SimplePirate.Queue.csproj", "{72A7CABE-F118-4C05-8887-D7174EB10018}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Multithreading", "Multithreading", "{48AFF127-33AE-4462-9CEF-B12F2FE6EB29}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Multithreaded Service", "Multithreaded Service", "{A5499CDF-674E-42C4-B9C0-D1F18A61B0C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultithreadedService", "Multithreading\Multithreaded Service\MultithreadedService\MultithreadedService.csproj", "{47791A50-18FA-4534-974A-9C38AAF9EEAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultithreadedService", "Multithreading\Multithreaded Service\MultithreadedService\MultithreadedService.csproj", "{47791A50-18FA-4534-974A-9C38AAF9EEAC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extended Request Reply", "Extended Request Reply", "{31C67BA1-D6A4-4CA3-8332-D35F950C5F63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestReplyBroker", "Load Balancing Pattern\Extended Request Reply\RequestReplyBroker\RequestReplyBroker.csproj", "{6CEDB2F2-013F-4EF2-BB69-16B6D5E8962A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestReplyBroker", "Load Balancing Pattern\Extended Request Reply\RequestReplyBroker\RequestReplyBroker.csproj", "{6CEDB2F2-013F-4EF2-BB69-16B6D5E8962A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestReplyClient", "Load Balancing Pattern\Extended Request Reply\RequestReplyClient\RequestReplyClient.csproj", "{5A370F99-247A-4238-8062-D6EC28543361}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestReplyClient", "Load Balancing Pattern\Extended Request Reply\RequestReplyClient\RequestReplyClient.csproj", "{5A370F99-247A-4238-8062-D6EC28543361}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestReplyWorker", "Load Balancing Pattern\Extended Request Reply\RequestReplyWorker\RequestReplyWorker.csproj", "{63AAFEDF-47DC-4137-BE93-2F9AB4DA5136}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RequestReplyWorker", "Load Balancing Pattern\Extended Request Reply\RequestReplyWorker\RequestReplyWorker.csproj", "{63AAFEDF-47DC-4137-BE93-2F9AB4DA5136}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InterBrokerRouter", "InterBrokerRouter\InterBrokerRouter.csproj", "{88F0CB10-D256-40D6-BF36-BF75CCF195AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterBrokerRouter", "InterBrokerRouter\InterBrokerRouter.csproj", "{88F0CB10-D256-40D6-BF36-BF75CCF195AE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InterBrokerRouter", "InterBrokerRouter", "{2F6A0636-3E13-438E-86F7-8BC1458C0AF2}"
 EndProject
@@ -66,11 +66,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Paranoid Pirate", "Paranoid
 		Pirate Pattern\Paranoid Pirate\StartParanoidPirate.bat = Pirate Pattern\Paranoid Pirate\StartParanoidPirate.bat
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParanoidPirate.Client", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Client\ParanoidPirate.Client.csproj", "{953327C9-0782-4EC9-A115-3C435E6440E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParanoidPirate.Client", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Client\ParanoidPirate.Client.csproj", "{953327C9-0782-4EC9-A115-3C435E6440E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParanoidPirate.Worker", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Worker\ParanoidPirate.Worker.csproj", "{80428E64-7589-4EDB-8F4D-8FAB437AC4D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParanoidPirate.Worker", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Worker\ParanoidPirate.Worker.csproj", "{80428E64-7589-4EDB-8F4D-8FAB437AC4D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParanoidPirate.Queue", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Queue\ParanoidPirate.Queue.csproj", "{528CE4CE-BB2E-432E-86BB-8199A97379A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParanoidPirate.Queue", "Pirate Pattern\Paranoid Pirate\ParanoidPirate.Queue\ParanoidPirate.Queue.csproj", "{528CE4CE-BB2E-432E-86BB-8199A97379A5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Majordomo Pattern", "Majordomo Pattern", "{813D3184-CAE9-4EA5-AD8F-CF0B5E890E79}"
 	ProjectSection(SolutionItems) = preProject
@@ -79,29 +79,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Majordomo Pattern", "Majord
 		Majordomo\StartMDPServiceDiscoveringClientExample.bat = Majordomo\StartMDPServiceDiscoveringClientExample.bat
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPClientExample", "Majordomo\MDPClientExample\MDPClientExample.csproj", "{BA3B66DE-85AB-44F0-890B-E598C777880D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPClientExample", "Majordomo\MDPClientExample\MDPClientExample.csproj", "{BA3B66DE-85AB-44F0-890B-E598C777880D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPClientAsyncExample", "Majordomo\MDPClientAsyncExample\MDPClientAsyncExample.csproj", "{E6115527-4D2B-4196-8C89-8A8D44141E5D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPClientAsyncExample", "Majordomo\MDPClientAsyncExample\MDPClientAsyncExample.csproj", "{E6115527-4D2B-4196-8C89-8A8D44141E5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MajordomoProtocol", "Majordomo\MajordomoProtocol\MajordomoProtocol.csproj", "{A16EBCCB-A575-4BA5-813D-C8AD925D5A59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MajordomoProtocol", "Majordomo\MajordomoProtocol\MajordomoProtocol.csproj", "{A16EBCCB-A575-4BA5-813D-C8AD925D5A59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MajordomoProtocolTests", "Majordomo\MajordomoProtocolTests\MajordomoProtocolTests.csproj", "{B2233737-D928-4C46-9FD0-3B7AD6BD23BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MajordomoProtocolTests", "Majordomo\MajordomoProtocolTests\MajordomoProtocolTests.csproj", "{B2233737-D928-4C46-9FD0-3B7AD6BD23BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPBrokerProcess", "Majordomo\MDPBrokerProcess\MDPBrokerProcess.csproj", "{110BC076-1D16-4593-B0C0-62F0A67ED264}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPBrokerProcess", "Majordomo\MDPBrokerProcess\MDPBrokerProcess.csproj", "{110BC076-1D16-4593-B0C0-62F0A67ED264}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPWorkerExample", "Majordomo\MDPWorkerExample\MDPWorkerExample.csproj", "{BEDD69FB-36D7-4E11-9306-FB4BF97F356E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPWorkerExample", "Majordomo\MDPWorkerExample\MDPWorkerExample.csproj", "{BEDD69FB-36D7-4E11-9306-FB4BF97F356E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Titanic Pattern", "Titanic Pattern", "{ED1FF3FB-01D4-4315-A6D5-070C420F2908}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicProtocol", "Titanic Pattern\TitanicBroker\TitanicProtocol.csproj", "{F92E05F9-9177-4889-B192-23DFB49EC045}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicProtocol", "Titanic Pattern\TitanicBroker\TitanicProtocol.csproj", "{F92E05F9-9177-4889-B192-23DFB49EC045}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPServiceDiscoveryClientExample", "Majordomo\MDPServiceDiscoveryClientExample\MDPServiceDiscoveryClientExample.csproj", "{9D3ECC09-8001-4282-8F46-414C3FFBE4A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPServiceDiscoveryClientExample", "Majordomo\MDPServiceDiscoveryClientExample\MDPServiceDiscoveryClientExample.csproj", "{9D3ECC09-8001-4282-8F46-414C3FFBE4A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicCommons", "Titanic Pattern\TitanicCommons\TitanicCommons.csproj", "{15327854-4753-4B80-AE20-1D34A94F5771}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicCommons", "Titanic Pattern\TitanicCommons\TitanicCommons.csproj", "{15327854-4753-4B80-AE20-1D34A94F5771}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicPatternTests", "Titanic Pattern\TitanicPatternTests\TitanicPatternTests.csproj", "{E065C121-21E0-4317-97DA-A1DBF7D74ABF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicPatternTests", "Titanic Pattern\TitanicPatternTests\TitanicPatternTests.csproj", "{E065C121-21E0-4317-97DA-A1DBF7D74ABF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicBrokerProcess", "Titanic Pattern\TitanicUsageExample\TitanicBrokerProcess\TitanicBrokerProcess.csproj", "{006B3229-99F3-4EE4-868B-FB496664AF91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicBrokerProcess", "Titanic Pattern\TitanicUsageExample\TitanicBrokerProcess\TitanicBrokerProcess.csproj", "{006B3229-99F3-4EE4-868B-FB496664AF91}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TitanicUsageExample", "TitanicUsageExample", "{6E473EBF-8344-4EC4-B66B-D6349B6F0F5F}"
 	ProjectSection(SolutionItems) = preProject
@@ -111,19 +111,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TitanicUsageExample", "Tita
 		Titanic Pattern\TitanicUsageExample\StartTitanicExample - Verbose.bat = Titanic Pattern\TitanicUsageExample\StartTitanicExample - Verbose.bat
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicClientExample", "Titanic Pattern\TitanicUsageExample\TitanicClientExample\TitanicClientExample.csproj", "{F516F643-D475-43FD-AEC7-B5CA8B997D22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicClientExample", "Titanic Pattern\TitanicUsageExample\TitanicClientExample\TitanicClientExample.csproj", "{F516F643-D475-43FD-AEC7-B5CA8B997D22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TitanicWorkerExample", "Titanic Pattern\TitanicUsageExample\TitanicWorkerExample\TitanicWorkerExample.csproj", "{32B1FA88-2A00-41C9-AF28-1EB9F8BB51F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TitanicWorkerExample", "Titanic Pattern\TitanicUsageExample\TitanicWorkerExample\TitanicWorkerExample.csproj", "{32B1FA88-2A00-41C9-AF28-1EB9F8BB51F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MDPCommons", "Majordomo\MDPCommons\MDPCommons.csproj", "{EC5A112C-5652-4EAA-BEE9-BF1A98F719C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MDPCommons", "Majordomo\MDPCommons\MDPCommons.csproj", "{EC5A112C-5652-4EAA-BEE9-BF1A98F719C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyPirate.Client2", "Pirate Pattern\Lazy Pirate\LazyPirate.Client2\LazyPirate.Client2.csproj", "{AC999819-265C-497A-8113-ADB8AC940CAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LazyPirate.Client2", "Pirate Pattern\Lazy Pirate\LazyPirate.Client2\LazyPirate.Client2.csproj", "{AC999819-265C-497A-8113-ADB8AC940CAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LazyPirate.Server2", "Pirate Pattern\Lazy Pirate\LazyPirate.Server2\LazyPirate.Server2.csproj", "{3193ADF3-D394-44A1-B44D-F53616886A1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LazyPirate.Server2", "Pirate Pattern\Lazy Pirate\LazyPirate.Server2\LazyPirate.Server2.csproj", "{3193ADF3-D394-44A1-B44D-F53616886A1E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Beacon", "Beacon", "{F6C473E4-3005-4C40-942D-82B156695377}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeaconDemo", "Beacon\BeaconDemo\BeaconDemo.csproj", "{D0B707E4-5563-41FA-A8B0-292605332EF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeaconDemo", "Beacon\BeaconDemo\BeaconDemo.csproj", "{D0B707E4-5563-41FA-A8B0-292605332EF1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{20D1F47F-AEA0-41E7-B671-0A1025F34C0D}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -628,5 +635,8 @@ Global
 		{AC999819-265C-497A-8113-ADB8AC940CAC} = {8F3B82AB-A6CE-4685-A846-83209A10A12B}
 		{3193ADF3-D394-44A1-B44D-F53616886A1E} = {8F3B82AB-A6CE-4685-A846-83209A10A12B}
 		{D0B707E4-5563-41FA-A8B0-292605332EF1} = {F6C473E4-3005-4C40-942D-82B156695377}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {02D41211-CDA7-42C6-8FD7-8C4AAE8AC42C}
 	EndGlobalSection
 EndGlobal

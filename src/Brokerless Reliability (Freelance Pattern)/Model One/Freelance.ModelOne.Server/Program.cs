@@ -1,69 +1,53 @@
-﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using NetMQ;
-using NetMQ.Sockets;
+﻿using System.Net.Sockets;
 
-namespace Freelance.ModelOne.Server
+const uint PortNumber = 5555;
+
+using var response = new ResponseSocket();
+
+string address = GetComputerLanIP();
+
+if (!string.IsNullOrEmpty(address))
 {
-    internal static class Program
+    Console.WriteLine("Binding tcp://{0}:{1}", address, PortNumber);
+    response.Bind($"tcp://{address}:{PortNumber}");
+
+    while (true)
     {
-        private const uint PortNumber = 5555;
-
-        private static void Main()
+        string msg = response.ReceiveFrameString(out bool hasMore);
+        if (string.IsNullOrEmpty(msg))
         {
-            using (var response = new ResponseSocket())
-            {
-                string address = GetComputerLanIP();
-
-                if (!string.IsNullOrEmpty(address))
-                {
-                    Console.WriteLine("Binding tcp://{0}:{1}", address, PortNumber);
-                    response.Bind($"tcp://{address}:{PortNumber}");
-
-                    while (true)
-                    {
-                        bool hasMore;
-                        string msg = response.ReceiveFrameString(out hasMore);
-                        if (string.IsNullOrEmpty(msg))
-                        {
-                            Console.WriteLine("No msg received.");
-                            break;
-                        }
-
-                        Console.WriteLine("Msg received! {0}", msg);
-                        response.SendFrame(msg, hasMore);
-
-                        Thread.Sleep(1000);
-                    }
-
-                    response.Options.Linger = TimeSpan.Zero;
-                }
-                else
-                {
-                    Console.WriteLine("Wrong IP address");
-                }
-
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-            }
+            Console.WriteLine("No msg received.");
+            break;
         }
 
-        private static string GetComputerLanIP()
+        Console.WriteLine("Msg received! {0}", msg);
+        response.SendFrame(msg, hasMore);
+
+        Thread.Sleep(1000);
+    }
+
+    response.Options.Linger = TimeSpan.Zero;
+}
+else
+{
+    Console.WriteLine("Wrong IP address");
+}
+
+Console.WriteLine("Press any key to exit...");
+Console.ReadKey();
+
+static string GetComputerLanIP()
+{
+    string strHostName = Dns.GetHostName();
+    IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
+
+    foreach (var ipAddress in ipEntry.AddressList)
+    {
+        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
         {
-            string strHostName = Dns.GetHostName();
-            IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
-
-            foreach (var ipAddress in ipEntry.AddressList)
-            {
-                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ipAddress.ToString();
-                }
-            }
-
-            return "";
+            return ipAddress.ToString();
         }
     }
+
+    return "";
 }

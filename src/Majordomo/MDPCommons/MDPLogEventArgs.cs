@@ -1,9 +1,6 @@
-﻿using System;
+﻿namespace MDPCommons;
 
-namespace MDPCommons
+public class MDPLogEventArgs : EventArgs
 {
-    public class MDPLogEventArgs : EventArgs
-    {
-        public string Info { get; set; }
-    }
+    public string Info { get; set; }
 }

@@ -1,96 +1,81 @@
-﻿using System;
-using System.Text;
-using NetMQ;
-using NetMQ.Sockets;
+﻿// Run both LazyPirate.Server and LazyPirate.Client simultaneously to see the demonstration of this pattern.
 
-namespace LazyPirate.Client
+const int RequestTimeout = 2500;
+const int RequestRetries = 10;
+const string ServerEndpoint = "tcp://127.0.0.1:5555";
+
+int sequence = 0;
+bool expectReply = true;
+int retriesLeft = RequestRetries;
+
+Console.Title = "NetMQ LazyPirate Client";
+
+RequestSocket client = CreateServerSocket();
+
+while (retriesLeft > 0)
 {
-    /// <summary>
-    /// Run both LazyPirate.Server and LazyPirate.Client simultaneously to see the demonstration of this pattern.
-    /// </summary>
-    internal static class Program
+    sequence++;
+    Console.WriteLine("C: Sending ({0})", sequence);
+    client.SendFrame(Encoding.Unicode.GetBytes(sequence.ToString()));
+    expectReply = true;
+
+    while (expectReply)
     {
-        private const int RequestTimeout = 2500;
-        private const int RequestRetries = 10;
-        private const string ServerEndpoint = "tcp://127.0.0.1:5555";
+        bool result = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
 
-        private static int s_sequence;
-        private static bool s_expectReply = true;
-        private static int s_retriesLeft = RequestRetries;
+        if (result)
+            continue;
 
-        private static void Main()
+        retriesLeft--;
+
+        if (retriesLeft == 0)
         {
-            Console.Title = "NetMQ LazyPirate Client";
-
-            RequestSocket client = CreateServerSocket();
-
-            while (s_retriesLeft > 0)
-            {
-                s_sequence++;
-                Console.WriteLine("C: Sending ({0})", s_sequence);
-                client.SendFrame(Encoding.Unicode.GetBytes(s_sequence.ToString()));
-                s_expectReply = true;
-
-                while (s_expectReply)
-                {
-                    bool result = client.Poll(TimeSpan.FromMilliseconds(RequestTimeout));
-
-                    if (result)
-                        continue;
-
-                    s_retriesLeft--;
-
-                    if (s_retriesLeft == 0)
-                    {
-                        Console.WriteLine("C: Server seems to be offline, abandoning");
-                        break;
-                    }
-
-                    Console.WriteLine("C: No response from server, retrying...");
-
-                    TerminateClient(client);
-
-                    client = CreateServerSocket();
-                    client.SendFrame(Encoding.Unicode.GetBytes(s_sequence.ToString()));
-                }
-            }
-
-            TerminateClient(client);
+            Console.WriteLine("C: Server seems to be offline, abandoning");
+            break;
         }
 
-        private static void TerminateClient(NetMQSocket client)
-        {
-            client.Disconnect(ServerEndpoint);
-            client.Close();
-        }
+        Console.WriteLine("C: No response from server, retrying...");
 
-        private static RequestSocket CreateServerSocket()
-        {
-            Console.WriteLine("C: Connecting to server...");
+        TerminateClient(client);
 
-            var client = new RequestSocket();
-            client.Connect(ServerEndpoint);
-            client.Options.Linger = TimeSpan.Zero;
-            client.ReceiveReady += ClientOnReceiveReady;
+        client = CreateServerSocket();
+        client.SendFrame(Encoding.Unicode.GetBytes(sequence.ToString()));
+    }
+}
 
-            return client;
-        }
+TerminateClient(client);
 
-        private static void ClientOnReceiveReady(object sender, NetMQSocketEventArgs args)
-        {
-            var reply = args.Socket.ReceiveFrameBytes();
-            string strReply = Encoding.Unicode.GetString(reply);
+void TerminateClient(NetMQSocket client)
+{
+    client.Disconnect(ServerEndpoint);
+    client.Close();
+}
 
-            if (Int32.Parse(strReply) == s_sequence)
-            {
-                Console.WriteLine("C: Server replied OK ({0})", strReply);
-                s_retriesLeft = RequestRetries;
-                s_expectReply = false;
-            }
-            else
-            {
-                Console.WriteLine("C: Malformed reply from server: {0}", strReply);
-            }
-        }
+RequestSocket CreateServerSocket()
+{
+    Console.WriteLine("C: Connecting to server...");
+
+    var client = new RequestSocket();
+    client.Connect(ServerEndpoint);
+    client.Options.Linger = TimeSpan.Zero;
+    client.ReceiveReady += ClientOnReceiveReady;
+
+    return client;
+}
+
+void ClientOnReceiveReady(object sender, NetMQSocketEventArgs args)
+{
+    var reply = args.Socket.ReceiveFrameBytes();
+    string strReply = Encoding.Unicode.GetString(reply);
+
+    if (int.Parse(strReply) == sequence)
+    {
+        Console.WriteLine("C: Server replied OK ({0})", strReply);
+        retriesLeft = RequestRetries;
+        expectReply = false;
+    }
+    else
+    {
+        Console.WriteLine("C: Malformed reply from server: {0}", strReply);
     }
 }

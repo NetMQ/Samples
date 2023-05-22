@@ -1,9 +1,6 @@
-﻿using System;
+﻿namespace TitanicCommons;
 
-namespace TitanicCommons
+public class TitanicLogEventArgs : EventArgs
 {
-    public class TitanicLogEventArgs : EventArgs
-    {
-        public string Info { get; set; }
-    }
+    public string Info { get; set; }
 }
