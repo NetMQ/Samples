@@ -9,7 +9,13 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="NetMQ" />
+
     <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Console" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="NUnit.Analyzers" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+
     <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.IO" />
     <PackageReference Include="System.Memory" />

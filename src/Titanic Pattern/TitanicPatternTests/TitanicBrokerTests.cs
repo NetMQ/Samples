@@ -34,7 +34,7 @@ public class TitanicBrokerTests
 
         // clean up
         File.Delete(queue);
-        Directory.Delete(path);
+        Directory.Delete(path, recursive: true);
     }
 
     [Test]
@@ -56,7 +56,7 @@ public class TitanicBrokerTests
         {
             // clean up
             File.Delete(queue);
-            Directory.Delete(path);
+            Directory.Delete(path, recursive: true);
         }
     }
 
@@ -77,7 +77,7 @@ public class TitanicBrokerTests
         // clean up
         cts.Cancel();
         File.Delete(queue);
-        Directory.Delete(path);
+        Directory.Delete(path, recursive: true);
     }
 
     [Test]
@@ -102,7 +102,7 @@ public class TitanicBrokerTests
         // clean up
         cts.Cancel();
         File.Delete(queue);
-        Directory.Delete(path);
+        Directory.Delete(path, recursive: true);
     }
 
     /*
