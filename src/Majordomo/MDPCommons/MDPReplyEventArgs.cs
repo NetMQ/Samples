@@ -1,25 +1,24 @@
-﻿namespace MDPCommons
+﻿namespace MDPCommons;
+
+public class MDPReplyEventArgs : EventArgs
 {
-    public class MDPReplyEventArgs : EventArgs
+    public NetMQMessage Reply { get; private set; }
+
+    public Exception Exception { get; private set; }
+
+    public MDPReplyEventArgs(NetMQMessage reply)
     {
-        public NetMQMessage Reply { get; private set; }
+        Reply = reply;
+    }
 
-        public Exception Exception { get; private set; }
+    public MDPReplyEventArgs(NetMQMessage reply, Exception exception) 
+        : this(reply)
+    {
+        Exception = exception;
+    }
 
-        public MDPReplyEventArgs(NetMQMessage reply)
-        {
-            Reply = reply;
-        }
-
-        public MDPReplyEventArgs(NetMQMessage reply, Exception exception) 
-            : this(reply)
-        {
-            Exception = exception;
-        }
-
-        public bool HasError()
-        {
-            return (Exception != null ? true : false);
-        }
+    public bool HasError()
+    {
+        return (Exception != null ? true : false);
     }
 }

@@ -1,26 +1,25 @@
-﻿namespace HelloWorld
+﻿namespace HelloWorld;
+
+internal static class Program
 {
-    internal static class Program
+    private static void Main()
     {
-        private static void Main()
+        Console.Title = "NetMQ HelloWorld";
+
+        using (var server = new ResponseSocket("@tcp://localhost:5556"))
+        using (var client = new RequestSocket("tcp://localhost:5556"))
         {
-            Console.Title = "NetMQ HelloWorld";
+            client.SendFrame("Hello");
 
-            using (var server = new ResponseSocket("@tcp://localhost:5556"))
-            using (var client = new RequestSocket("tcp://localhost:5556"))
-            {
-                client.SendFrame("Hello");
+            Console.WriteLine("From Client: {0}", server.ReceiveFrameString());
 
-                Console.WriteLine("From Client: {0}", server.ReceiveFrameString());
+            server.SendFrame("Hi Back");
 
-                server.SendFrame("Hi Back");
+            Console.WriteLine("From Server: {0}", client.ReceiveFrameString());
 
-                Console.WriteLine("From Server: {0}", client.ReceiveFrameString());
-
-                Console.WriteLine();
-                Console.Write("Press any key to exit...");
-                Console.ReadKey();
-            }
+            Console.WriteLine();
+            Console.Write("Press any key to exit...");
+            Console.ReadKey();
         }
     }
 }

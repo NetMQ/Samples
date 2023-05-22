@@ -1,41 +1,40 @@
-﻿namespace LazyPirate.Server
+﻿namespace LazyPirate.Server;
+
+internal static class Program
 {
-    internal static class Program
+    private static void Main()
     {
-        private static void Main()
+        Console.Title = "NetMQ LazyPirate Server";
+
+        const string serverEndpoint = "tcp://127.0.0.1:5555";
+
+        var random = new Random();
+
+        using (var server = new ResponseSocket())
         {
-            Console.Title = "NetMQ LazyPirate Server";
+            Console.WriteLine("S: Binding address {0}", serverEndpoint);
+            server.Bind(serverEndpoint);
 
-            const string serverEndpoint = "tcp://127.0.0.1:5555";
+            var cycles = 0;
 
-            var random = new Random();
-
-            using (var server = new ResponseSocket())
+            while (true)
             {
-                Console.WriteLine("S: Binding address {0}", serverEndpoint);
-                server.Bind(serverEndpoint);
+                byte[] request = server.ReceiveFrameBytes();
+                cycles++;
 
-                var cycles = 0;
-
-                while (true)
+                if (cycles > 3 && random.Next(0, 10) == 0)
                 {
-                    byte[] request = server.ReceiveFrameBytes();
-                    cycles++;
-
-                    if (cycles > 3 && random.Next(0, 10) == 0)
-                    {
-                        Console.WriteLine("S: Simulating a crash");
-                        Thread.Sleep(5000);
-                    }
-                    else if (cycles > 3 && random.Next(0, 10) == 0)
-                    {
-                        Console.WriteLine("S: Simulating CPU overload");
-                        Thread.Sleep(1000);
-                    }
-
-                    Console.WriteLine("S: Normal request ({0})", Encoding.Unicode.GetString(request));
-                    server.SendFrame(request);
+                    Console.WriteLine("S: Simulating a crash");
+                    Thread.Sleep(5000);
                 }
+                else if (cycles > 3 && random.Next(0, 10) == 0)
+                {
+                    Console.WriteLine("S: Simulating CPU overload");
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("S: Normal request ({0})", Encoding.Unicode.GetString(request));
+                server.SendFrame(request);
             }
         }
     }

@@ -6,263 +6,262 @@ using JetBrains.Annotations;
 using TitanicCommons;
 
 [assembly: InternalsVisibleTo("TitanicPatternTests")]
-namespace TitanicProtocol
+namespace TitanicProtocol;
+
+/// <summary>
+///     this class handles the I/O for TITANIC
+///     if allows to transparently write, read, find and delete entries
+///     in memory (CocurrentQueue)
+/// 
+///     it is fast but all information is lost in case this computer or
+///     the process dies!
+/// </summary>
+public class TitanicMemoryIO : ITitanicIO
 {
     /// <summary>
-    ///     this class handles the I/O for TITANIC
-    ///     if allows to transparently write, read, find and delete entries
-    ///     in memory (CocurrentQueue)
-    /// 
-    ///     it is fast but all information is lost in case this computer or
-    ///     the process dies!
+    ///     dictionary to hold all requests and supporting data in memory
+    ///     Guid is the key and the RequestEntry the data
     /// </summary>
-    public class TitanicMemoryIO : ITitanicIO
+    private readonly ConcurrentDictionary<Guid, RequestEntry> m_titanicQueue;
+
+    /// <summary>
+    ///     the hook for the handling of logging messages published
+    /// </summary>
+    public event EventHandler<TitanicLogEventArgs> LogInfoReady;
+
+    /// <summary>
+    ///     will throw an InvalidOperationException
+    /// </summary>
+    public string TitanicDirectory { get { throw new InvalidOperationException("In-Memory IO does not provide a directory."); } }
+
+    /// <summary>
+    ///     will throw an InvalidOperationException
+    /// </summary>
+    public string TitanicQueue { get { throw new InvalidOperationException("In-Memory IO does not provide a file name for the titanic queue."); } }
+
+    internal int NumberOfRequests => m_titanicQueue.Count;
+
+    /// <summary>
+    ///     ctor
+    /// </summary>
+    public TitanicMemoryIO()
     {
-        /// <summary>
-        ///     dictionary to hold all requests and supporting data in memory
-        ///     Guid is the key and the RequestEntry the data
-        /// </summary>
-        private readonly ConcurrentDictionary<Guid, RequestEntry> m_titanicQueue;
+        m_titanicQueue = new ConcurrentDictionary<Guid, RequestEntry>();
+    }
 
-        /// <summary>
-        ///     the hook for the handling of logging messages published
-        /// </summary>
-        public event EventHandler<TitanicLogEventArgs> LogInfoReady;
+    #region REQUEST/REPLY QUEUE I/O HANDLING
 
-        /// <summary>
-        ///     will throw an InvalidOperationException
-        /// </summary>
-        public string TitanicDirectory { get { throw new InvalidOperationException("In-Memory IO does not provide a directory."); } }
+    /// <summary>
+    ///     get the request entry identified by the GUID from the infrastructure
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns>a request entry or default(RequestEntry) if no request entry with the id exists</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id" /> is a 'null' reference.</exception>
+    public RequestEntry GetRequestEntry(Guid id)
+    {
+        return m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry : default;
+    }
 
-        /// <summary>
-        ///     will throw an InvalidOperationException
-        /// </summary>
-        public string TitanicQueue { get { throw new InvalidOperationException("In-Memory IO does not provide a file name for the titanic queue."); } }
+    /// <summary>
+    ///     gets all existing request entries from the infrastructure satisfying the specified predicate
+    /// </summary>
+    /// <param name="predicate">the predicate to satisfy</param>
+    /// <returns>a sequence of request entries if any or an empty sequence</returns>
+    public IEnumerable<RequestEntry> GetRequestEntries(Func<RequestEntry, bool> predicate)
+    {
+        if (m_titanicQueue.IsEmpty)
+            return default(IEnumerable<RequestEntry>);
 
-        internal int NumberOfRequests => m_titanicQueue.Count;
+        var result = m_titanicQueue.Values.Where(predicate).ToArray();
 
-        /// <summary>
-        ///     ctor
-        /// </summary>
-        public TitanicMemoryIO()
+        return result.Length > 0 ? result : new RequestEntry[0];
+    }
+
+    /// <summary>
+    ///     gets all request entries from the infrastructure which are NOT closed
+    ///     only State = (Is_Pending OR Is_Processed) are considered
+    /// </summary>
+    /// <returns>sequence of request entries</returns>
+    public IEnumerable<RequestEntry> GetNotClosedRequestEntries()
+    {
+        return GetRequestEntries(e => e.State != RequestEntry.Is_Closed);
+    }
+
+    /// <summary>
+    ///     saves a request entry to the infrastructure
+    /// </summary>
+    /// <param name="entry">the request entry to save</param>
+    /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="entry.RequestId" /> is a 'null' reference.</exception>
+    public void SaveRequestEntry(RequestEntry entry)
+    {
+        if (entry is null)
         {
-            m_titanicQueue = new ConcurrentDictionary<Guid, RequestEntry>();
+            throw new ArgumentNullException(nameof(entry), "The RequestEntry to save must not be null!");
         }
 
-        #region REQUEST/REPLY QUEUE I/O HANDLING
+        m_titanicQueue.AddOrUpdate(entry.RequestId, entry, (id, e) => entry);
+    }
 
-        /// <summary>
-        ///     get the request entry identified by the GUID from the infrastructure
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns>a request entry or default(RequestEntry) if no request entry with the id exists</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="id" /> is a 'null' reference.</exception>
-        public RequestEntry GetRequestEntry(Guid id)
+    /// <summary>
+    ///     save a new request under a GUID
+    /// </summary>
+    /// <param name="id">the id of the request</param>
+    /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
+    public void SaveNewRequestEntry(Guid id)
+    {
+        // if it is already processed or closed (but not yet deleted) -> forget it
+        if (ExistsMessage(TitanicOperation.Reply, id) || ExistsMessage(TitanicOperation.Close, id))
+            return;
+
+        // the entry could already exist - so check and use it if so
+        var entry = ExistsMessage(TitanicOperation.Request, id)
+                        ? GetRequestEntry(id)
+                        : new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending };
+
+        SaveRequestEntry(entry);
+    }
+
+    /// <summary>
+    ///     save a new request under a GUID and the request data itself as well
+    /// </summary>
+    /// <param name="id">the id of the request</param>
+    /// <param name="request">the request to save</param>
+    /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
+    public void SaveNewRequestEntry(Guid id, NetMQMessage request)
+    {
+        var entry = new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending, Request = request };
+
+        SaveRequestEntry(entry);
+    }
+
+    /// <summary>
+    ///     save a processed request entry and mark it as such
+    /// </summary>
+    /// <param name="entry">the entry to save</param>
+    /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
+    public void SaveProcessedRequestEntry(RequestEntry entry)
+    {
+        entry.State = RequestEntry.Is_Processed;
+
+        SaveRequestEntry(entry);
+    }
+
+    /// <summary>
+    ///     remove a request from the queue
+    /// </summary>
+    /// <param name="id">the GUID of the request to close</param>
+    public void CloseRequest(Guid id)
+    {
+        if (id == Guid.Empty)
+            return;
+        m_titanicQueue.TryRemove(id, out _);
+    }
+
+    #endregion
+
+    #region Message HANDLING
+
+    /// <summary>
+    ///     get a NetMQ message identified by a GUID from the infrastructure
+    /// </summary>
+    /// <param name="id">the guid of the message to read, must not be empty</param>
+    /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
+    public NetMQMessage GetMessage(TitanicOperation op, Guid id) => m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry.Request : new NetMQMessage();
+
+    /// <summary>
+    ///     read a NetMQ message identified by a GUID asynchronously
+    /// </summary>
+    /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
+    /// <param name="id">the guid of the message to read</param>
+    public Task<NetMQMessage> GetMessageAsync(TitanicOperation op, Guid id)
+    {
+        var tcs = new TaskCompletionSource<NetMQMessage>();
+
+        try
         {
-            return m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry : default;
+            tcs.SetResult(GetMessage(op, id));
+        }
+        catch (Exception ex)
+        {
+            tcs.SetException(ex);
         }
 
-        /// <summary>
-        ///     gets all existing request entries from the infrastructure satisfying the specified predicate
-        /// </summary>
-        /// <param name="predicate">the predicate to satisfy</param>
-        /// <returns>a sequence of request entries if any or an empty sequence</returns>
-        public IEnumerable<RequestEntry> GetRequestEntries(Func<RequestEntry, bool> predicate)
+        return tcs.Task;
+    }
+
+    /// <summary>
+    ///     save a NetMQ message under a GUID
+    /// </summary>
+    /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
+    /// <param name="id">the guid of the message to save</param>
+    /// <param name="message">the message to save</param>
+    /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
+    public bool SaveMessage(TitanicOperation op, Guid id, NetMQMessage message)
+    {
+        var entry = new RequestEntry
         {
-            if (m_titanicQueue.IsEmpty)
-                return default(IEnumerable<RequestEntry>);
+            RequestId = id,
+            Request = message,
+            State = GetStateFromOperation(op)
+        };
 
-            var result = m_titanicQueue.Values.Where(predicate).ToArray();
+        m_titanicQueue.AddOrUpdate(id, entry, (i, oldValue) => entry);
 
-            return result.Length > 0 ? result : new RequestEntry[0];
+        return true;
+    }
+
+    /// <summary>
+    ///     save  a NetMQ message with a GUID asynchronously
+    /// </summary>
+    /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
+    /// <param name="id">the guid of the message to save</param>
+    /// <param name="message">the message to save</param>
+    public Task<bool> SaveMessageAsync(TitanicOperation op, Guid id, NetMQMessage message)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        try
+        {
+            tcs.SetResult(SaveMessage(op, id, message));
+        }
+        catch (Exception ex)
+        {
+            tcs.SetException(ex);
         }
 
-        /// <summary>
-        ///     gets all request entries from the infrastructure which are NOT closed
-        ///     only State = (Is_Pending OR Is_Processed) are considered
-        /// </summary>
-        /// <returns>sequence of request entries</returns>
-        public IEnumerable<RequestEntry> GetNotClosedRequestEntries()
-        {
-            return GetRequestEntries(e => e.State != RequestEntry.Is_Closed);
-        }
+        return tcs.Task;
+    }
 
-        /// <summary>
-        ///     saves a request entry to the infrastructure
-        /// </summary>
-        /// <param name="entry">the request entry to save</param>
-        /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="entry.RequestId" /> is a 'null' reference.</exception>
-        public void SaveRequestEntry(RequestEntry entry)
-        {
-            if (entry is null)
-            {
-                throw new ArgumentNullException(nameof(entry), "The RequestEntry to save must not be null!");
-            }
+    /// <summary>
+    ///     test if a request or reply with the GUID exists
+    /// </summary>
+    /// <param name="op">commands whether it is for a REQUEST or a REPLY</param>
+    /// <param name="id">the GUID für the Request/Reply</param>
+    /// <returns>
+    ///         true if it exists and false otherwise and if 'op' is not one 
+    ///         of the aforementioned
+    /// </returns>
+    public bool ExistsMessage(TitanicOperation op, Guid id)
+    {
+        return op != TitanicOperation.Close
+               && m_titanicQueue.Any(e => e.Value.RequestId == id && e.Value.State == GetStateFromOperation(op));
+    }
 
-            m_titanicQueue.AddOrUpdate(entry.RequestId, entry, (id, e) => entry);
-        }
+    #endregion
 
-        /// <summary>
-        ///     save a new request under a GUID
-        /// </summary>
-        /// <param name="id">the id of the request</param>
-        /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveNewRequestEntry(Guid id)
-        {
-            // if it is already processed or closed (but not yet deleted) -> forget it
-            if (ExistsMessage(TitanicOperation.Reply, id) || ExistsMessage(TitanicOperation.Close, id))
-                return;
+    private static byte GetStateFromOperation(TitanicOperation op)
+    {
+        return op == TitanicOperation.Request ? RequestEntry.Is_Pending : RequestEntry.Is_Processed;
+    }
 
-            // the entry could already exist - so check and use it if so
-            var entry = ExistsMessage(TitanicOperation.Request, id)
-                            ? GetRequestEntry(id)
-                            : new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending };
+    public int GetNumberOfRequests() => NumberOfRequests;
 
-            SaveRequestEntry(entry);
-        }
+    private void Log([NotNull] string info) => OnLogInfoReady(new TitanicLogEventArgs { Info = info });
 
-        /// <summary>
-        ///     save a new request under a GUID and the request data itself as well
-        /// </summary>
-        /// <param name="id">the id of the request</param>
-        /// <param name="request">the request to save</param>
-        /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveNewRequestEntry(Guid id, NetMQMessage request)
-        {
-            var entry = new RequestEntry { RequestId = id, Position = -1, State = RequestEntry.Is_Pending, Request = request };
-
-            SaveRequestEntry(entry);
-        }
-
-        /// <summary>
-        ///     save a processed request entry and mark it as such
-        /// </summary>
-        /// <param name="entry">the entry to save</param>
-        /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public void SaveProcessedRequestEntry(RequestEntry entry)
-        {
-            entry.State = RequestEntry.Is_Processed;
-
-            SaveRequestEntry(entry);
-        }
-
-        /// <summary>
-        ///     remove a request from the queue
-        /// </summary>
-        /// <param name="id">the GUID of the request to close</param>
-        public void CloseRequest(Guid id)
-        {
-            if (id == Guid.Empty)
-                return;
-            m_titanicQueue.TryRemove(id, out _);
-        }
-
-        #endregion
-
-        #region Message HANDLING
-
-        /// <summary>
-        ///     get a NetMQ message identified by a GUID from the infrastructure
-        /// </summary>
-        /// <param name="id">the guid of the message to read, must not be empty</param>
-        /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
-        public NetMQMessage GetMessage(TitanicOperation op, Guid id) => m_titanicQueue.TryGetValue(id, out RequestEntry entry) ? entry.Request : new NetMQMessage();
-
-        /// <summary>
-        ///     read a NetMQ message identified by a GUID asynchronously
-        /// </summary>
-        /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
-        /// <param name="id">the guid of the message to read</param>
-        public Task<NetMQMessage> GetMessageAsync(TitanicOperation op, Guid id)
-        {
-            var tcs = new TaskCompletionSource<NetMQMessage>();
-
-            try
-            {
-                tcs.SetResult(GetMessage(op, id));
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-            }
-
-            return tcs.Task;
-        }
-
-        /// <summary>
-        ///     save a NetMQ message under a GUID
-        /// </summary>
-        /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
-        /// <param name="id">the guid of the message to save</param>
-        /// <param name="message">the message to save</param>
-        /// <exception cref="OverflowException">max. number of elements exceeded, <see cref="F:System.Int32.MaxValue" />.</exception>
-        public bool SaveMessage(TitanicOperation op, Guid id, NetMQMessage message)
-        {
-            var entry = new RequestEntry
-            {
-                RequestId = id,
-                Request = message,
-                State = GetStateFromOperation(op)
-            };
-
-            m_titanicQueue.AddOrUpdate(id, entry, (i, oldValue) => entry);
-
-            return true;
-        }
-
-        /// <summary>
-        ///     save  a NetMQ message with a GUID asynchronously
-        /// </summary>
-        /// <param name="op">defines whether it is a REQUEST or REPLY message</param>
-        /// <param name="id">the guid of the message to save</param>
-        /// <param name="message">the message to save</param>
-        public Task<bool> SaveMessageAsync(TitanicOperation op, Guid id, NetMQMessage message)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-
-            try
-            {
-                tcs.SetResult(SaveMessage(op, id, message));
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-            }
-
-            return tcs.Task;
-        }
-
-        /// <summary>
-        ///     test if a request or reply with the GUID exists
-        /// </summary>
-        /// <param name="op">commands whether it is for a REQUEST or a REPLY</param>
-        /// <param name="id">the GUID für the Request/Reply</param>
-        /// <returns>
-        ///         true if it exists and false otherwise and if 'op' is not one 
-        ///         of the aforementioned
-        /// </returns>
-        public bool ExistsMessage(TitanicOperation op, Guid id)
-        {
-            return op != TitanicOperation.Close
-                   && m_titanicQueue.Any(e => e.Value.RequestId == id && e.Value.State == GetStateFromOperation(op));
-        }
-
-        #endregion
-
-        private static byte GetStateFromOperation(TitanicOperation op)
-        {
-            return op == TitanicOperation.Request ? RequestEntry.Is_Pending : RequestEntry.Is_Processed;
-        }
-
-        public int GetNumberOfRequests() => NumberOfRequests;
-
-        private void Log([NotNull] string info) => OnLogInfoReady(new TitanicLogEventArgs { Info = info });
-
-        /// <exception cref="Exception">A delegate callback throws an exception. </exception>
-        protected virtual void OnLogInfoReady(TitanicLogEventArgs e)
-        {
-            LogInfoReady?.Invoke(this, e);
-        }
+    /// <exception cref="Exception">A delegate callback throws an exception. </exception>
+    protected virtual void OnLogInfoReady(TitanicLogEventArgs e)
+    {
+        LogInfoReady?.Invoke(this, e);
     }
 }

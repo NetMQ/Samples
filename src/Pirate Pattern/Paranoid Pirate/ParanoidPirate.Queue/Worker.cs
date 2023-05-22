@@ -1,35 +1,34 @@
-﻿namespace ParanoidPirate.Queue
+﻿namespace ParanoidPirate.Queue;
+
+public class Worker : IDisposable
 {
-    public class Worker : IDisposable
+    public DateTime Expiry { get; set; }
+
+    public NetMQFrame Identity { get; set; }
+
+    public string Name
     {
-        public DateTime Expiry { get; set; }
+        get { return Identity.ConvertToString(); }
+        set { Identity = new NetMQFrame(value); }
+    }
 
-        public NetMQFrame Identity { get; set; }
+    public Worker(NetMQFrame id)
+    {
+        Identity = id;
+        Expiry = DateTime.UtcNow + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval*Commons.HeartbeatLiveliness);
+    }
 
-        public string Name
-        {
-            get { return Identity.ConvertToString(); }
-            set { Identity = new NetMQFrame(value); }
-        }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        public Worker(NetMQFrame id)
-        {
-            Identity = id;
-            Expiry = DateTime.UtcNow + TimeSpan.FromMilliseconds(Commons.HeartbeatInterval*Commons.HeartbeatLiveliness);
-        }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing)
+            return;
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing)
-                return;
-
-            Identity = null;
-        }
+        Identity = null;
     }
 }

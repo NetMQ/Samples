@@ -1,59 +1,58 @@
 ﻿using System.Collections;
 
-namespace ParanoidPirate.Queue
+namespace ParanoidPirate.Queue;
+
+public class Workers : IEnumerable<Worker>
 {
-    public class Workers : IEnumerable<Worker>
+    private readonly List<Worker> m_workers = new List<Worker>();
+
+    /// <summary>
+    /// true if there are workers available
+    /// </summary>
+    public bool Available => m_workers.Count > 0;
+
+    /// <summary>
+    /// stores a worker for a LRU pattern
+    /// </summary>
+    public void Ready(Worker worker)
     {
-        private readonly List<Worker> m_workers = new List<Worker>();
+        m_workers.Add(worker);
+    }
 
-        /// <summary>
-        /// true if there are workers available
-        /// </summary>
-        public bool Available => m_workers.Count > 0;
+    /// <summary>
+    /// a NetMQFrame with the identity of the next available worker 
+    /// or null if no worker is available
+    /// </summary>
+    public NetMQFrame Next()
+    {
+        if (m_workers.Count == 0)
+            return null;
 
-        /// <summary>
-        /// stores a worker for a LRU pattern
-        /// </summary>
-        public void Ready(Worker worker)
-        {
-            m_workers.Add(worker);
-        }
+        // get the oldest worker
+        var worker = m_workers[0];
+        // remove it from list
+        m_workers.RemoveAt(0);
 
-        /// <summary>
-        /// a NetMQFrame with the identity of the next available worker 
-        /// or null if no worker is available
-        /// </summary>
-        public NetMQFrame Next()
-        {
-            if (m_workers.Count == 0)
-                return null;
+        return worker.Identity;
+    }
 
-            // get the oldest worker
-            var worker = m_workers[0];
-            // remove it from list
-            m_workers.RemoveAt(0);
+    /// <summary>
+    /// removes every worker which has exceeded his livetime
+    /// </summary>
+    public void Purge()
+    {
+        foreach (var worker in m_workers.Where(worker => worker.Expiry < DateTime.UtcNow).ToList())
+            m_workers.Remove(worker);
+            
+    }
 
-            return worker.Identity;
-        }
+    public IEnumerator<Worker> GetEnumerator()
+    {
+        return m_workers.GetEnumerator();
+    }
 
-        /// <summary>
-        /// removes every worker which has exceeded his livetime
-        /// </summary>
-        public void Purge()
-        {
-            foreach (var worker in m_workers.Where(worker => worker.Expiry < DateTime.UtcNow).ToList())
-                m_workers.Remove(worker);
-                
-        }
-
-        public IEnumerator<Worker> GetEnumerator()
-        {
-            return m_workers.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

@@ -1,102 +1,101 @@
-﻿namespace ROUTERbrokerDEALERworkers
+﻿namespace ROUTERbrokerDEALERworkers;
+
+internal static class Program
 {
-    internal static class Program
+    private const int PortNumber = 5555;
+
+    // We have two workers, here we copy the code, normally these would run on different boxes…
+    public static void Main()
     {
-        private const int PortNumber = 5555;
+        var random = new Random(DateTime.Now.Millisecond);
+        var workers = new List<Thread>(new[] { new Thread(WorkerTaskA), new Thread(WorkerTaskB) });
 
-        // We have two workers, here we copy the code, normally these would run on different boxes…
-        public static void Main()
+        using (var client = new RouterSocket())
         {
-            var random = new Random(DateTime.Now.Millisecond);
-            var workers = new List<Thread>(new[] { new Thread(WorkerTaskA), new Thread(WorkerTaskB) });
+            client.Bind($"tcp://localhost:{PortNumber}");
 
-            using (var client = new RouterSocket())
+            foreach (var thread in workers)
             {
-                client.Bind($"tcp://localhost:{PortNumber}");
-
-                foreach (var thread in workers)
-                {
-                    thread.Start(PortNumber);
-                }
-
-                // Wait for threads to connect, since otherwise the messages we send won't be routable.
-                Thread.Sleep(1000);
-
-                for (int taskNumber = 0; taskNumber < 1000; taskNumber++)
-                {
-                    // Send two message parts, first the address…
-                    client.SendMoreFrame(random.Next(3) > 0 ? Encoding.Unicode.GetBytes("A") : Encoding.Unicode.GetBytes("B"));
-
-                    // And then the workload
-                    client.SendFrame("This is the workload");
-                }
-
-                client.SendMoreFrame(Encoding.Unicode.GetBytes("A"));
-                client.SendFrame("END");
-
-                client.SendMoreFrame(Encoding.Unicode.GetBytes("B"));
-                client.SendFrame("END");
+                thread.Start(PortNumber);
             }
 
-            Console.ReadKey();
+            // Wait for threads to connect, since otherwise the messages we send won't be routable.
+            Thread.Sleep(1000);
+
+            for (int taskNumber = 0; taskNumber < 1000; taskNumber++)
+            {
+                // Send two message parts, first the address…
+                client.SendMoreFrame(random.Next(3) > 0 ? Encoding.Unicode.GetBytes("A") : Encoding.Unicode.GetBytes("B"));
+
+                // And then the workload
+                client.SendFrame("This is the workload");
+            }
+
+            client.SendMoreFrame(Encoding.Unicode.GetBytes("A"));
+            client.SendFrame("END");
+
+            client.SendMoreFrame(Encoding.Unicode.GetBytes("B"));
+            client.SendFrame("END");
         }
 
-        private static void WorkerTaskA(object portNumber)
+        Console.ReadKey();
+    }
+
+    private static void WorkerTaskA(object portNumber)
+    {
+        using (var worker = new DealerSocket())
         {
-            using (var worker = new DealerSocket())
+            worker.Options.Identity = Encoding.Unicode.GetBytes("A");
+            worker.Connect($"tcp://localhost:{portNumber}");
+
+            int total = 0;
+
+            bool end = false;
+
+            while (!end)
             {
-                worker.Options.Identity = Encoding.Unicode.GetBytes("A");
-                worker.Connect($"tcp://localhost:{portNumber}");
+                string request = worker.ReceiveFrameString();
 
-                int total = 0;
-
-                bool end = false;
-
-                while (!end)
+                if (request == "END")
                 {
-                    string request = worker.ReceiveFrameString();
-
-                    if (request == "END")
-                    {
-                        end = true;
-                    }
-                    else
-                    {
-                        total++;
-                    }
+                    end = true;
                 }
-
-                Console.WriteLine("A Received: {0}", total);
+                else
+                {
+                    total++;
+                }
             }
+
+            Console.WriteLine("A Received: {0}", total);
         }
+    }
 
-        private static void WorkerTaskB(object portNumber)
+    private static void WorkerTaskB(object portNumber)
+    {
+        using (var worker = new DealerSocket())
         {
-            using (var worker = new DealerSocket())
+            worker.Options.Identity = Encoding.Unicode.GetBytes("B");
+            worker.Connect($"tcp://localhost:{portNumber}");
+
+            int total = 0;
+
+            bool end = false;
+
+            while (!end)
             {
-                worker.Options.Identity = Encoding.Unicode.GetBytes("B");
-                worker.Connect($"tcp://localhost:{portNumber}");
+                string request = worker.ReceiveFrameString();
 
-                int total = 0;
-
-                bool end = false;
-
-                while (!end)
+                if (request == "END")
                 {
-                    string request = worker.ReceiveFrameString();
-
-                    if (request == "END")
-                    {
-                        end = true;
-                    }
-                    else
-                    {
-                        total++;
-                    }
+                    end = true;
                 }
-
-                Console.WriteLine("B Received: {0}", total);
+                else
+                {
+                    total++;
+                }
             }
+
+            Console.WriteLine("B Received: {0}", total);
         }
     }
 }
