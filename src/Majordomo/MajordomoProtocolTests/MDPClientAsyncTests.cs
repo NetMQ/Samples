@@ -35,7 +35,7 @@ public class MDPClientAsyncTests
     }
 
     [Test]
-    public void SendCorrectInputWithLoggingShouldReturnCorrectReply()
+    public async Task SendCorrectInputWithLoggingShouldReturnCorrectReply()
     {
         const string hostAddress = "tcp://localhost:5555";
         var loggingMessages = new List<string>();
@@ -88,7 +88,7 @@ public class MDPClientAsyncTests
 
         session.Send(serviceName, requestMessage);
 
-        task.Wait();
+        await task;
 
         Assert.That(loggingMessages.Count, Is.EqualTo(3));
         Assert.That(loggingMessages[0], Is.EqualTo("[CLIENT] connecting to broker at tcp://localhost:5555"));
@@ -145,7 +145,7 @@ public class MDPClientAsyncTests
     }
 
     [Test]
-    public void SendEmptyReplyFromBrokerWithLoggingShouldThrowApplicationException()
+    public async Task SendEmptyReplyFromBrokerWithLoggingShouldThrowApplicationException()
     {
         const string hostAddress = "tcp://localhost:5555";
         var loggingMessages = new List<string>();
@@ -197,11 +197,11 @@ public class MDPClientAsyncTests
         };
 
         poller.Add(timer);
-        task.Wait();
+        await task;
     }
 
     [Test]
-    public void SendWrongMDPVersionFromBrokerNoLoggingShouldThrowApplicationException()
+    public async Task SendWrongMDPVersionFromBrokerNoLoggingShouldThrowApplicationExceptionAsync()
     {
         const string hostAddress = "tcp://localhost:5555";
 
@@ -255,11 +255,11 @@ public class MDPClientAsyncTests
         var requestMessage = new NetMQMessage(new[] { new NetMQFrame("REQUEST") });
         session.Send("echo", requestMessage);
 
-        task.Wait();
+        await task;
     }
 
     [Test]
-    public void SendWrongHeaderFromBrokerNoLoggingShouldThrowApplicationException()
+    public async Task SendWrongHeaderFromBrokerNoLoggingShouldThrowApplicationExceptionAsync()
     {
         const string hostAddress = "tcp://localhost:5555";
 
@@ -315,11 +315,11 @@ public class MDPClientAsyncTests
         var requestMessage = new NetMQMessage(new[] { new NetMQFrame("REQUEST") });
         session.Send("echo", requestMessage);
 
-        task.Wait();
+        await task;
     }
 
     [Test]
-    public void ReconnectToBrokerIfIsNotReplying()
+    public async Task ReconnectToBrokerIfIsNotReplying()
     {
         const string hostAddress = "tcp://localhost:5555";
         const int timeOutToReconnectInMillis = 7500;
@@ -379,7 +379,7 @@ public class MDPClientAsyncTests
 
         session.Send(serviceName, requestMessage);
 
-        task.Wait();
+        await task;
 
         var numberOfConnects = loggingMessages.FindAll(x => x.Contains("[CLIENT] connecting to broker")).Count;
         Assert.IsTrue(numberOfConnects > 1);

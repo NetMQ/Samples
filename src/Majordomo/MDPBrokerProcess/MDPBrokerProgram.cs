@@ -6,7 +6,7 @@ internal static class MDPBrokerProgram
 {
     private static bool s_verbose, s_debug;
 
-    private static void Main (string[] args)
+    private static async Task Main (string[] args)
     {
         if ((args.Length == 1 && args[0] != "-v") || args.Length > 1)
         {
@@ -39,7 +39,7 @@ internal static class MDPBrokerProgram
 
         try
         {
-            RunBroker (cts).Wait ();
+            await RunBroker (cts);
         }
         catch (AggregateException ex)
         {
