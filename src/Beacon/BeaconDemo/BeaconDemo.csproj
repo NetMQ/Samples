@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="AsyncIO" Version="0.1.69" />
-    <PackageReference Include="NaCl.Net" Version="0.1.13" />
-    <PackageReference Include="NetMQ" Version="4.0.1.10" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="AsyncIO" />
+    <PackageReference Include="NaCl.Net" />
+    <PackageReference Include="NetMQ" />
+    <PackageReference Include="System.Memory" />
+    <PackageReference Include="System.Numerics.Vectors" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="_ReadMe.txt" />
-  </ItemGroup>
+
 </Project>

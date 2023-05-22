@@ -1,12 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="AsyncIO" Version="0.1.69" />
-    <PackageReference Include="NetMQ" Version="4.0.1.10" />
+    <PackageReference Include="AsyncIO" />
+    <PackageReference Include="NetMQ" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ParanoidPirate.Queue\ParanoidPirate.Queue.csproj" />
   </ItemGroup>
+
 </Project>
