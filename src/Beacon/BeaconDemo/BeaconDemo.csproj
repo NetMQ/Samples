@@ -5,8 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsyncIO" />
-    <PackageReference Include="NaCl.Net" />
     <PackageReference Include="NetMQ" />
     <PackageReference Include="System.Memory" />
     <PackageReference Include="System.Numerics.Vectors" />

@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="AsyncIO" />
-    <PackageReference Include="NaCl.Net" />
     <PackageReference Include="NetMQ" />
     <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.Memory" />

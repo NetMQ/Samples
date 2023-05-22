@@ -6,8 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsyncIO" />
-    <PackageReference Include="NaCl.Net" />
     <PackageReference Include="NetMQ" />
     <PackageReference Include="NUnit" />
     <PackageReference Include="System.Buffers" />
